@@ -143,3 +143,87 @@ async getById(id: string) {
 ```
 
 **例外**：無例外。若確實遇到 service 會變成純 wrapper 而覺得冗贅，請在 service 的 method 留 TODO 註記未來可能加入的業務邏輯位置（權限、cache、事件等），而不是跳過 service。
+
+### C3. 設計必須符合業界標準（Design Patterns + Clean Code）
+
+**規則**：在產生新程式碼、重構或做架構決策之前，必須以「熟讀 Design Patterns（GoF）與 Clean Code」的水準思考並給出**符合業界標準**的設計。不可只追求「能跑就好」，也不可堆砌模式炫技。具體要求：
+
+1. **SOLID 必須守**：
+   - **S**ingle Responsibility — 一個 class / function 只做一件事
+   - **O**pen/Closed — 加新能力靠「加檔案」而不是「改既有檔案的 switch」（例如 C2 之外的 TTS provider 範例：新增 provider 不該改 `ttsService`）
+   - **L**iskov — 子類 / 實作不能偷偷改變契約語意
+   - **I**nterface Segregation — 介面要小、要切；不要逼 client 依賴它用不到的 method
+   - **D**ependency Inversion — 高層依賴抽象，不依賴具體實作（例如 controller 依賴 `TtsProvider` interface，不依賴 `AzurePersonalVoiceService` class）
+
+2. **Clean Code 基本功必須守**：
+   - **命名**表達意圖（`calculateCost` 而非 `calc`、`ttsProvider` 而非 `svc`）
+   - **函式短小**（一個 function 只做一層抽象、建議 20 行內）
+   - **避免 magic number / magic string**（抽常數或 enum）
+   - **避免深層巢狀**（early return、guard clause）
+   - **註解解釋「為什麼」而非「做什麼」**（code 該自己解釋「做什麼」）
+   - **DRY** 但要與 WET / 「rule of three」取得平衡（兩處重複可容忍，三處就該抽）
+
+3. **選用設計模式前先問三個問題**：
+   - 有沒有真的需要這個模式？還是想炫技？（YAGNI）
+   - 專案既有慣例是否已經解決這個問題？（一致性優先於理論最佳）
+   - 加進去之後，團隊其他人讀得懂嗎？
+
+4. **當使用者的需求可以用多種方式實作時**，agent 必須：
+   - 明確說明有哪幾種主流做法（而不是只給一個）
+   - 點出每種做法的 trade-off（複雜度、可擴展性、一致性、成本）
+   - 推薦一個並說明為什麼，但把決定權交回使用者
+   - 若不確定業界現況，應配合 `research-industry-practices` skill 查證，而不是憑印象回答
+
+**原因**：
+- 避免「程式能跑但設計爛」的技術債累積，後續重構成本遠高於一開始寫對
+- 本專案長期要支援多種外部 provider、多種業務規則，沒有良好抽象會變成 if/else 地獄
+- AI 產的 code 容易出現「能跑但違反 SOLID」的反模式（例如 God Service、把所有邏輯塞 controller、靠 switch 換實作），必須明文守門
+- 使用者有權知道自己的選擇在業界是不是主流做法，而不是被 agent 帶風向
+
+**適用範圍**：**所有**程式碼產出與架構討論，包含新功能、重構、bug fix、review。對既有違反規範的程式碼，原則是「修改到它時順手改善」，不要求一次大規模重寫。
+
+**反面示範**：
+```ts
+// ❌ God Service：一個 class 塞所有業務（違反 SRP）
+class UserService {
+  createUser() {}
+  sendEmail() {}
+  chargePayment() {}
+  generateAvatar() {}
+  // ... 30 個方法
+}
+
+// ❌ 用 if/else 判斷 provider（違反 OCP，加 provider 要改這裡）
+async function generateTts(provider: string, text: string) {
+  if (provider === "azure") return azureImpl(text);
+  else if (provider === "google") return googleImpl(text);
+  else if (provider === "elevenlabs") return elevenImpl(text);
+  // 每加一家都要改這個 function
+}
+
+// ❌ Magic number + 不表達意圖的命名
+function calc(t: string) {
+  return t.length * 0.5 + (t.match(/[\u4E00-\u9FFF]/g)?.length ?? 0) * 1.5;
+}
+```
+
+```ts
+// ✅ 遵守 OCP / DIP：新增 provider 不用改呼叫端
+interface TtsProvider {
+  generateSpeech(request: TtsRequest): Promise<TtsResult>;
+  calculateCost(request: TtsRequest): CostInfo;
+}
+// 加新 provider = 加一個 class，不用改任何 consumer
+
+// ✅ 命名表達意圖、常數命名、guard clause
+const TTS_RATE = { CHINESE: 1.5, ENGLISH: 0.5 } as const;
+
+function calculateTtsTokens(text: string): number {
+  if (!text) return 0;
+  const chineseCount = countChineseChars(text);
+  const englishCount = countEnglishChars(text);
+  return Math.ceil(chineseCount * TTS_RATE.CHINESE + englishCount * TTS_RATE.ENGLISH);
+}
+```
+
+**備註**：此規範與 C1、C2 不衝突，而是**更高階的指導原則**。C1/C2 是具體規則，C3 是背後的設計哲學。當未來新增 C4、C5… 等具體規則時，它們也必須先通過 C3 的精神檢驗。
