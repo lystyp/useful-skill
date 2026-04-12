@@ -15,10 +15,9 @@ disable-model-invocation: true
 
 2. 同時執行 `git log --oneline -10` 查看最近的 commit 風格作為參考。
 
-3. 根據 diff 內容分析變更，撰寫 commit 訊息：
-   - 第一行簡潔描述（中文或英文，依照 git log 中的既有風格）
+3. 根據 diff 內容分析變更，並參考 `git log` 中的歷史 commit 格式（前綴、語言、風格）來撰寫 commit 訊息：
+   - 第一行簡潔描述，格式需與歷史 commit 保持一致
    - 如果變更較複雜，加上詳細說明
-   - 結尾加上 `Co-Authored-By: Claude <noreply@anthropic.com>`
 
 4. **將草擬的 commit 訊息展示給使用者確認**，詢問是否需要修改。
 
