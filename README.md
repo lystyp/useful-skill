@@ -8,6 +8,7 @@
 | --- | --- |
 | [research-industry-practices](skills/research-industry-practices/) | 遇到技術選型、最佳實踐、工具比較類問題時，強制透過 WebSearch/WebFetch 查詢當前業界實務，避免依賴 LLM 過時的內建知識。 |
 | [project-conventions](skills/project-conventions/) | 專案程式碼規範集合。任何 agent 產生或修改程式碼前先閱讀；也支援用一句話追加新規範（「以後都要這樣寫」）。 |
+| [commit](skills/commit/) | 根據 git staged/unstaged changes 分析變更並撰寫 commit 訊息，提交前會先讓使用者確認。 |
 
 ## 安裝
 
@@ -20,6 +21,7 @@ git clone https://github.com/lystyp/useful-skill.git ~/useful-skill
 mkdir -p ~/.claude/skills
 ln -s ~/useful-skill/skills/research-industry-practices ~/.claude/skills/research-industry-practices
 ln -s ~/useful-skill/skills/project-conventions        ~/.claude/skills/project-conventions
+ln -s ~/useful-skill/skills/commit                     ~/.claude/skills/commit
 ```
 
 ### 方法二：直接複製
