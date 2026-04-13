@@ -9,6 +9,7 @@
 | [research-industry-practices](skills/research-industry-practices/) | 遇到技術選型、最佳實踐、工具比較類問題時，強制透過 WebSearch/WebFetch 查詢當前業界實務，避免依賴 LLM 過時的內建知識。 |
 | [project-conventions](skills/project-conventions/) | 專案程式碼規範集合。任何 agent 產生或修改程式碼前先閱讀；也支援用一句話追加新規範（「以後都要這樣寫」）。 |
 | [commit](skills/commit/) | 根據 git staged/unstaged changes 分析變更並撰寫 commit 訊息，提交前會先讓使用者確認。 |
+| [learning-note](skills/learning-note/) | 將工作中遇到的知識點製作成結構化學習筆記，用「問題驅動」敘事方式講解原理，搭配簡單範例。 |
 
 ## 安裝
 
@@ -22,6 +23,7 @@ mkdir -p ~/.claude/skills
 ln -s ~/useful-skill/skills/research-industry-practices ~/.claude/skills/research-industry-practices
 ln -s ~/useful-skill/skills/project-conventions        ~/.claude/skills/project-conventions
 ln -s ~/useful-skill/skills/commit                     ~/.claude/skills/commit
+ln -s ~/useful-skill/skills/learning-note              ~/.claude/skills/learning-note
 ```
 
 ### 方法二：直接複製
