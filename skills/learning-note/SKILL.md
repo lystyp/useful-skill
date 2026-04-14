@@ -143,11 +143,15 @@ output: 一份 Markdown 學習筆記檔案
 
 收到 sub agent 回傳的筆記後：
 
-1. 先用 AskUserQuestion 問使用者：
-   > 筆記要存到哪裡？請給我目錄路徑，或直接按 Enter 使用預設位置 `~/notes/`
+1. 用 AskUserQuestion 問使用者輸出方式，提供以下選項：
+   - **輸出到 console**：直接將筆記內容印在對話中，不寫入檔案
+   - **儲存到 ~/notes/**：使用預設目錄
+   - **自訂路徑**：讓使用者輸入目錄路徑
 
-2. 將主題名稱轉為 kebab-case 作為檔名（例如 `dependency-injection.md`）
+2. 如果使用者選擇「輸出到 console」：
+   - 直接將筆記的完整 Markdown 內容輸出到對話中，不做任何檔案寫入
 
-3. 用 Write tool 將筆記寫入指定目錄
-
-4. 告訴使用者筆記已儲存的完整路徑
+3. 如果使用者選擇儲存到檔案（預設或自訂路徑）：
+   - 將主題名稱轉為 kebab-case 作為檔名（例如 `dependency-injection.md`）
+   - 用 Write tool 將筆記寫入指定目錄
+   - 告訴使用者筆記已儲存的完整路徑

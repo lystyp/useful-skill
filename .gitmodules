@@ -1,3 +1,3 @@
-[submodule ".claude/skills/code-review-skill"]
-	path = .claude/skills/code-review-skill
+[submodule "skills/code-review-skill"]
+	path = skills/code-review-skill
 	url = https://github.com/awesome-skills/code-review-skill.git
