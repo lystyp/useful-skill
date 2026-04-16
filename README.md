@@ -11,6 +11,7 @@
 | [commit](skills/commit/) | 根據 git staged/unstaged changes 分析變更並撰寫 commit 訊息，提交前會先讓使用者確認。 |
 | [learning-note](skills/learning-note/) | 將工作中遇到的知識點製作成結構化學習筆記，用「問題驅動」敘事方式講解原理，搭配簡單範例。 |
 | [code-review-skill](skills/code-review-skill/) | 多語言 code review 指引（React/Vue/Rust/TS/Java/Python/C++），catch bugs、提升品質、給建設性 feedback。以 git submodule 連結上游 [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill)。 |
+| [test-writing-style](skills/test-writing-style/) | UT / Integration Test 的寫作風格規範：檔頭註解、測試命名、段落排版、import 分群、斷言寫法、錯誤路徑組織。與 write-unit-test（方法論）互補，專注在「測試程式碼怎麼排版寫」。 |
 
 ## 安裝
 
@@ -26,6 +27,7 @@ ln -s ~/useful-skill/skills/project-conventions        ~/.claude/skills/project-
 ln -s ~/useful-skill/skills/commit                     ~/.claude/skills/commit
 ln -s ~/useful-skill/skills/learning-note              ~/.claude/skills/learning-note
 ln -s ~/useful-skill/skills/code-review-skill          ~/.claude/skills/code-review-skill
+ln -s ~/useful-skill/skills/test-writing-style         ~/.claude/skills/test-writing-style
 ```
 
 ### 方法二：直接複製
