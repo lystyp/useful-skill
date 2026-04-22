@@ -54,8 +54,16 @@ Source of truth：`backend/guidelines/*.md`（專案內既有）。本 skill 是
    - **可以合併**：多個 API 共用同一段商業邏輯、或是查詢參數不同但流程幾乎一樣（例如 `findOne` / `findMany` 可以在同一個 service）
    - **可以拆更細**：單一 API 內部流程太長、或不同步驟本身就是獨立職責（見 SRP 四問），就拆成多個 service 互相 compose
    - 判斷原則：**以職責為單位**，一對一只是大多數時候最剛好。不要為了一對一硬拆，也不要為了少寫一個檔硬塞
+7. **Device API 用 snake_case、CMS API 用 camelCase** — 專案既定的對外命名契約，query 參數、response 欄位、swagger schema **全部都適用**：
+   - `/api/*`（CMS / 管理端）→ 所有欄位 **camelCase**（`avatarId`, `sortBy`, `createdAt`）
+   - `/device/*`（Device / 行動端）→ 所有欄位 **snake_case**（`avatar_id`, `sort_by`, `created_at`）
+   - **Prisma client field 是 camelCase**（這是 Prisma 生成的預設），所以寫 `/device/*` 時一定要在 **service 邊界**做轉換：
+     - validator 產 snake_case query → service 解構 rename 成 camelCase → 傳 repository / Prisma：`const { avatar_id: avatarId, sort_by: sortBy } = query;`
+     - repo 取回 camelCase row → `toXxxItem` mapper 轉回 snake_case response：`{ avatar_id: item.avatarId, created_at: item.createdAt.toISOString() }`
+   - 參考既有 pattern：[src/validators/device/appearance.validator.ts](src/validators/device/appearance.validator.ts) 是標準 snake_case 對照組
+   - 不要混用，不要只改一半（例如 query 對齊了 response 沒對齊）。混用會讓前端整合每支 API 都要寫特例
 
-違反這六條是這個 repo 最常見的 code review comment，寫 code 前再確認一次。
+違反這七條是這個 repo 最常見的 code review comment，寫 code 前再確認一次。
 
 ---
 
@@ -190,8 +198,7 @@ async findByIdWithAvatarOrThrow(id: string, tx?: PrismaTransactionClient) {
 
 來自 `backend/guidelines/add-swagger.md`，這幾個**很容易錯**：
 
-- API url `/api/*` → 所有欄位 **camelCase**
-- API url `/device/*` → 所有欄位 **snake_case**
+- 欄位命名：`/api/*` camelCase、`/device/*` snake_case（見鐵律 7，含 Prisma 邊界轉換寫法）
 - enum：`z.enum(EnumClass)` ✅，**不要** `z.nativeEnum(EnumClass)`
 - datetime：`z.iso.datetime()` ✅，**不要** `z.string().datetime()`
 - uuid：`createUuidSchema("desc", "error msg")` ✅，**不要**手刻 `z.string().uuid(...).openapi(...)`
