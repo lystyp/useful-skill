@@ -14,6 +14,7 @@
 | [test-writing-style](skills/test-writing-style/) | UT / Integration Test 的寫作風格規範：檔頭註解、測試命名、段落排版、import 分群、斷言寫法、錯誤路徑組織。與 write-unit-test（方法論）互補，專注在「測試程式碼怎麼排版寫」。 |
 | [plan-new-api](skills/plan-new-api/) | 在 Express + Prisma + Zod 後端新增一支 API 的完整流程：一次一題釐清規格（HTTP/URL、輸入驗證、權限、排序…）→ 分層實作（validator / repo / service / controller / route / swagger）→ 寫測試（service integration + validator unit）→ commit。自足獨立不依賴其他 skill。 |
 | [ai-family-backend-style](skills/ai-family-backend-style/) | `ai_family_backend` / backend-v2 專案專用的 coding style & tips：分層架構、Zod validator 慣例、Prisma + Exception 處理、Swagger 流程、SRP 四問、Commit 規範。包含「不要重造輪子」六條鐵律（response function、service 吃 validator 型別、common validator / utils 先用既有、swagger 同步、service 一對一原則）。 |
+| [grill-me](skills/grill-me/) | 對使用者的 plan / design 進行連環追問，沿著決策樹一個分支一個分支收斂，每題都附上建議答案，每次只問一題；可由 codebase 回答的就直接探索。鏡像自 [mattpocock/skills/grill-me](https://github.com/mattpocock/skills/tree/main/grill-me)。 |
 
 ## 安裝
 
@@ -32,6 +33,7 @@ ln -s ~/useful-skill/skills/code-review-skill          ~/.claude/skills/code-rev
 ln -s ~/useful-skill/skills/test-writing-style         ~/.claude/skills/test-writing-style
 ln -s ~/useful-skill/skills/plan-new-api               ~/.claude/skills/plan-new-api
 ln -s ~/useful-skill/skills/ai-family-backend-style    ~/.claude/skills/ai-family-backend-style
+ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
 ```
 
 ### 方法二：直接複製
