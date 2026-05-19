@@ -15,6 +15,7 @@
 | [plan-new-api](skills/plan-new-api/) | 在 Express + Prisma + Zod 後端新增一支 API 的完整流程：一次一題釐清規格（HTTP/URL、輸入驗證、權限、排序…）→ 分層實作（validator / repo / service / controller / route / swagger）→ 寫測試（service integration + validator unit）→ commit。自足獨立不依賴其他 skill。 |
 | [ai-family-backend-style](skills/ai-family-backend-style/) | `ai_family_backend` / backend-v2 專案專用的 coding style & tips：分層架構、Zod validator 慣例、Prisma + Exception 處理、Swagger 流程、SRP 四問、Commit 規範。包含「不要重造輪子」六條鐵律（response function、service 吃 validator 型別、common validator / utils 先用既有、swagger 同步、service 一對一原則）。 |
 | [grill-me](skills/grill-me/) | 對使用者的 plan / design 進行連環追問，沿著決策樹一個分支一個分支收斂，每題都附上建議答案，每次只問一題；可由 codebase 回答的就直接探索。鏡像自 [mattpocock/skills/grill-me](https://github.com/mattpocock/skills/tree/main/grill-me)。 |
+| [isolated-worktree-session](skills/isolated-worktree-session/) | 平行多 session 改 code 時避免互相污染。**不自動觸發** —— 使用者要改 code 時，先問要不要啟用；同意後從 HEAD 切 temp branch + 開 worktree、嚴格鎖定 session 在 worktree 內、結束時詢問是否 cherry-pick 回原 branch。 |
 
 ## 安裝
 
@@ -34,6 +35,7 @@ ln -s ~/useful-skill/skills/test-writing-style         ~/.claude/skills/test-wri
 ln -s ~/useful-skill/skills/plan-new-api               ~/.claude/skills/plan-new-api
 ln -s ~/useful-skill/skills/ai-family-backend-style    ~/.claude/skills/ai-family-backend-style
 ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
+ln -s ~/useful-skill/skills/isolated-worktree-session  ~/.claude/skills/isolated-worktree-session
 ```
 
 ### 方法二：直接複製
