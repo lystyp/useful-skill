@@ -16,6 +16,7 @@
 | [ai-family-backend-style](skills/ai-family-backend-style/) | `ai_family_backend` / backend-v2 專案專用的 coding style & tips：分層架構、Zod validator 慣例、Prisma + Exception 處理、Swagger 流程、SRP 四問、Commit 規範。包含「不要重造輪子」六條鐵律（response function、service 吃 validator 型別、common validator / utils 先用既有、swagger 同步、service 一對一原則）。 |
 | [grill-me](skills/grill-me/) | 對使用者的 plan / design 進行連環追問，沿著決策樹一個分支一個分支收斂，每題都附上建議答案，每次只問一題；可由 codebase 回答的就直接探索。鏡像自 [mattpocock/skills/grill-me](https://github.com/mattpocock/skills/tree/main/grill-me)。 |
 | [isolated-worktree-session](skills/isolated-worktree-session/) | 平行多 session 改 code 時避免互相污染。**不自動觸發** —— 使用者要改 code 時，先問要不要啟用；同意後從 HEAD 切 temp branch + 開 worktree、嚴格鎖定 session 在 worktree 內、結束時詢問是否 cherry-pick 回原 branch。 |
+| [readability-review](skills/readability-review/) | 從「人類讀者第一次閱讀」視角檢查程式碼可讀性，採 Ousterhout《A Philosophy of Software Design》立場（明確反對 Clean Code「越短越好、註解是失敗」教條）。兩遍掃描（Cold Read + Heuristic Check），只報「同時有閱讀卡點 + 可觀察訊號」的 finding，附四條自我節制規則防止退化成審美。 |
 
 ## 安裝
 
@@ -36,6 +37,7 @@ ln -s ~/useful-skill/skills/plan-new-api               ~/.claude/skills/plan-new
 ln -s ~/useful-skill/skills/ai-family-backend-style    ~/.claude/skills/ai-family-backend-style
 ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
 ln -s ~/useful-skill/skills/isolated-worktree-session  ~/.claude/skills/isolated-worktree-session
+ln -s ~/useful-skill/skills/readability-review         ~/.claude/skills/readability-review
 ```
 
 ### 方法二：直接複製
