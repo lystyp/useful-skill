@@ -17,6 +17,7 @@
 | [grill-me](skills/grill-me/) | 對使用者的 plan / design 進行連環追問，沿著決策樹一個分支一個分支收斂，每題都附上建議答案，每次只問一題；可由 codebase 回答的就直接探索。鏡像自 [mattpocock/skills/grill-me](https://github.com/mattpocock/skills/tree/main/grill-me)。 |
 | [isolated-worktree-session](skills/isolated-worktree-session/) | 平行多 session 改 code 時避免互相污染。**不自動觸發** —— 使用者要改 code 時，先問要不要啟用；同意後從 HEAD 切 temp branch + 開 worktree、嚴格鎖定 session 在 worktree 內、結束時詢問是否 cherry-pick 回原 branch。 |
 | [readability-review](skills/readability-review/) | 從「人類讀者第一次閱讀」視角檢查程式碼可讀性，採 Ousterhout《A Philosophy of Software Design》立場（明確反對 Clean Code「越短越好、註解是失敗」教條）。兩遍掃描（Cold Read + Heuristic Check），只報「同時有閱讀卡點 + 可觀察訊號」的 finding，附四條自我節制規則防止退化成審美。 |
+| [layered-architecture-design](skills/layered-architecture-design/) | 設計/描述軟體架構時，讓產出照 controller/handler → service → repository 分層、主流程讀成一條線，並在「該不該抽 interface / factory」時用問答收斂、避免過度抽象。對比 agent 預設的反模式（自創詞彙、factory 多一層、主流程打散）。寫 API 後端 / Lambda / CLI 都適用。 |
 
 ## 安裝
 
@@ -38,6 +39,7 @@ ln -s ~/useful-skill/skills/ai-family-backend-style    ~/.claude/skills/ai-famil
 ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
 ln -s ~/useful-skill/skills/isolated-worktree-session  ~/.claude/skills/isolated-worktree-session
 ln -s ~/useful-skill/skills/readability-review         ~/.claude/skills/readability-review
+ln -s ~/useful-skill/skills/layered-architecture-design ~/.claude/skills/layered-architecture-design
 ```
 
 ### 方法二：直接複製
