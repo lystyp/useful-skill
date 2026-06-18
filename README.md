@@ -18,6 +18,7 @@
 | [isolated-worktree-session](skills/isolated-worktree-session/) | 平行多 session 改 code 時避免互相污染。**不自動觸發** —— 使用者要改 code 時，先問要不要啟用；同意後從 HEAD 切 temp branch + 開 worktree、嚴格鎖定 session 在 worktree 內、結束時詢問是否 cherry-pick 回原 branch。 |
 | [readability-review](skills/readability-review/) | 從「人類讀者第一次閱讀」視角檢查程式碼可讀性，採 Ousterhout《A Philosophy of Software Design》立場（明確反對 Clean Code「越短越好、註解是失敗」教條）。兩遍掃描（Cold Read + Heuristic Check），只報「同時有閱讀卡點 + 可觀察訊號」的 finding，附四條自我節制規則防止退化成審美。 |
 | [layered-architecture-design](skills/layered-architecture-design/) | 設計/描述軟體架構時，讓產出照 controller/handler → service → repository 分層、主流程讀成一條線，並在「該不該抽 interface / factory」時用問答收斂、避免過度抽象。對比 agent 預設的反模式（自創詞彙、factory 多一層、主流程打散）。寫 API 後端 / Lambda / CLI 都適用。 |
+| [design-sparring-partner](skills/design-sparring-partner/) | 不教寫某種 code，而是定義「跟使用者做非瑣碎開發時 AI 該有的協作姿態」：① 先診斷對齊、不急著產 code 並嚴守 scope guard；② 設計決策用「攤牌式」攤開思路與權衡軸、反 sycophancy（雙向）；③ 一切對著 code 驗證不憑記憶；④ 抵抗過度工程（essential vs coincidental）；⑤ 尊重使用者主導的節奏與乾淨 diff。 |
 
 ## 安裝
 
@@ -40,6 +41,7 @@ ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
 ln -s ~/useful-skill/skills/isolated-worktree-session  ~/.claude/skills/isolated-worktree-session
 ln -s ~/useful-skill/skills/readability-review         ~/.claude/skills/readability-review
 ln -s ~/useful-skill/skills/layered-architecture-design ~/.claude/skills/layered-architecture-design
+ln -s ~/useful-skill/skills/design-sparring-partner    ~/.claude/skills/design-sparring-partner
 ```
 
 ### 方法二：直接複製
