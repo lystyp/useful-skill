@@ -9,7 +9,7 @@
 | [research-industry-practices](skills/research-industry-practices/) | 遇到技術選型、最佳實踐、工具比較類問題時，強制透過 WebSearch/WebFetch 查詢當前業界實務，避免依賴 LLM 過時的內建知識。 |
 | [project-conventions](skills/project-conventions/) | 專案程式碼規範集合。任何 agent 產生或修改程式碼前先閱讀；也支援用一句話追加新規範（「以後都要這樣寫」）。 |
 | [commit](skills/commit/) | 根據 git staged/unstaged changes 分析變更並撰寫 commit 訊息，要求寫成對 reviewer 友善的版本（含非顯而易見設計決策的動機），提交前先讓使用者確認。 |
-| [learning-note](skills/learning-note/) | 將工作中遇到的知識點製作成結構化學習筆記，用「問題驅動」敘事方式講解原理，搭配簡單範例。 |
+| [learn-from-known](skills/learn-from-known/) | 用「從已知推導未知」的依賴關係優先教學法帶使用者學任何新主題：依「舊方法 → 痛點 → 需要的新能力 → 名詞 → 最小模型 → 完整功能」順序教，並把進度寫進一份 Markdown 大綱檔、隨進度更新。使用者說「教我」「我想學」「幫我理解」時觸發。 |
 | [code-review-skill](skills/code-review-skill/) | 多語言 code review 指引（React/Vue/Rust/TS/Java/Python/C++），catch bugs、提升品質、給建設性 feedback。以 git submodule 連結上游 [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill)。 |
 | [test-writing-style](skills/test-writing-style/) | UT / Integration Test 的寫作風格規範：檔頭註解、測試命名、段落排版、import 分群、斷言寫法、錯誤路徑組織。與 write-unit-test（方法論）互補，專注在「測試程式碼怎麼排版寫」。 |
 | [plan-new-api](skills/plan-new-api/) | 在 Express + Prisma + Zod 後端新增一支 API 的完整流程：一次一題釐清規格（HTTP/URL、輸入驗證、權限、排序…）→ 分層實作（validator / repo / service / controller / route / swagger）→ 寫測試（service integration + validator unit）→ commit。自足獨立不依賴其他 skill。 |
@@ -17,6 +17,7 @@
 | [grill-me](skills/grill-me/) | 對使用者的 plan / design 進行連環追問，沿著決策樹一個分支一個分支收斂，每題都附上建議答案，每次只問一題；可由 codebase 回答的就直接探索。鏡像自 [mattpocock/skills/grill-me](https://github.com/mattpocock/skills/tree/main/grill-me)。 |
 | [isolated-worktree-session](skills/isolated-worktree-session/) | 平行多 session 改 code 時避免互相污染。**不自動觸發** —— 使用者要改 code 時，先問要不要啟用；同意後從 HEAD 切 temp branch + 開 worktree、嚴格鎖定 session 在 worktree 內、結束時詢問是否 cherry-pick 回原 branch。 |
 | [readability-review](skills/readability-review/) | 從「人類讀者第一次閱讀」視角檢查程式碼可讀性，採 Ousterhout《A Philosophy of Software Design》立場（明確反對 Clean Code「越短越好、註解是失敗」教條）。兩遍掃描（Cold Read + Heuristic Check），只報「同時有閱讀卡點 + 可觀察訊號」的 finding，附四條自我節制規則防止退化成審美。 |
+| [architecture-first](skills/architecture-first/) | 動手寫「非瑣碎」功能前，先盤點變化軸、設計邊界與介面、確認依賴方向，跟使用者確認架構後才開始實作。以 OO 與設計模式為基礎，刻意避免過度耦合與過度拆解。接 I/O / 外部系統、或「同一件事未來可能換多種實作」時特別適用；純知識問答 / 修 bug / 改名 / 瑣事不觸發。 |
 | [layered-architecture-design](skills/layered-architecture-design/) | 設計/描述軟體架構時，讓產出照 controller/handler → service → repository 分層、主流程讀成一條線，並在「該不該抽 interface / factory」時用問答收斂、避免過度抽象。對比 agent 預設的反模式（自創詞彙、factory 多一層、主流程打散）。寫 API 後端 / Lambda / CLI 都適用。 |
 | [design-sparring-partner](skills/design-sparring-partner/) | 不教寫某種 code，而是定義「跟使用者做非瑣碎開發時 AI 該有的協作姿態」：① 先診斷對齊、不急著產 code 並嚴守 scope guard；② 設計決策用「攤牌式」攤開思路與權衡軸、反 sycophancy（雙向）；③ 一切對著 code 驗證不憑記憶；④ 抵抗過度工程（essential vs coincidental）；⑤ 尊重使用者主導的節奏與乾淨 diff。 |
 
@@ -32,7 +33,7 @@ mkdir -p ~/.claude/skills
 ln -s ~/useful-skill/skills/research-industry-practices ~/.claude/skills/research-industry-practices
 ln -s ~/useful-skill/skills/project-conventions        ~/.claude/skills/project-conventions
 ln -s ~/useful-skill/skills/commit                     ~/.claude/skills/commit
-ln -s ~/useful-skill/skills/learning-note              ~/.claude/skills/learning-note
+ln -s ~/useful-skill/skills/learn-from-known           ~/.claude/skills/learn-from-known
 ln -s ~/useful-skill/skills/code-review-skill          ~/.claude/skills/code-review-skill
 ln -s ~/useful-skill/skills/test-writing-style         ~/.claude/skills/test-writing-style
 ln -s ~/useful-skill/skills/plan-new-api               ~/.claude/skills/plan-new-api
@@ -40,6 +41,7 @@ ln -s ~/useful-skill/skills/ai-family-backend-style    ~/.claude/skills/ai-famil
 ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
 ln -s ~/useful-skill/skills/isolated-worktree-session  ~/.claude/skills/isolated-worktree-session
 ln -s ~/useful-skill/skills/readability-review         ~/.claude/skills/readability-review
+ln -s ~/useful-skill/skills/architecture-first         ~/.claude/skills/architecture-first
 ln -s ~/useful-skill/skills/layered-architecture-design ~/.claude/skills/layered-architecture-design
 ln -s ~/useful-skill/skills/design-sparring-partner    ~/.claude/skills/design-sparring-partner
 ```
