@@ -1,47 +1,32 @@
+# 從讀者視角冷讀 code（可讀性審查方法論）
+
+> 本檔是 `design-sparring-partner` 的參考檔。當 §4 走到「readability 這道閘」、或使用者要「從人類讀者第一次閱讀的視角」檢查一段 code 好不好讀時，用這裡的**兩遍冷讀流程 + finding 格式 + 自我節制規則**產出可讀性報告。
+>
+> 跟一般 code review 的差異：一般 review 找 bug / 架構 / 安全 / 效能問題，本方法**只**找「讀者腦中的摩擦力」（停頓、跳轉、意外）。要 bug / 架構 / 安全 / 效能就不是用這套。輸出語言：繁體中文。
+
+## 目錄
+- 理論立場：Ousterhout 派
+- 強制流程：兩遍掃描（Cold Read + Heuristic Check）
+- Finding 輸出格式
+- 自我節制規則（四條紅線）
+- 範例：好的 finding vs 壞的 finding
+- 報告結構
+
 ---
-name: readability-review
-description: |
-  從「人類讀者第一次閱讀」的視角檢查程式碼可讀性，產出帶位置、卡點類型、觸發 heuristic 與重寫建議的 finding 報告。理論基礎是 Ousterhout《A Philosophy of Software Design》的 cognitive load 與 information locality，明確反對 Clean Code「function 越短越好、註解是失敗」的教條。
-
-  當使用者說「readability review」「可讀性 review」「冷讀一遍」「這段好不好讀」「從讀者視角看」「以讀者角度檢查」「human readability」「人類可讀性」「新人看得懂嗎」「接手的人讀起來如何」「這段好不好懂」「幫我用人的角度讀」時必須觸發。即使使用者沒明確說「可讀性」三個字，只要意圖是「這段別人讀起來順不順」就用此 skill。
-
-  跟一般 code review 的關鍵差異：一般 code review 找 bug / 架構 / 安全 / 效能問題，本 skill **只**找「讀者腦中的摩擦力」（停頓、跳轉、意外），並用 SonarQube cognitive complexity 與 seeinglogic 的視覺 pattern 作為可觀察訊號。若使用者要的是 bug / 架構 / 安全 / 效能檢查，不要觸發本 skill。
-
-  輸出語言：繁體中文。
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
----
-
-# Read Code As Human
-
-從「人類讀者第一次閱讀」的視角檢查 code，找出讀者腦中的摩擦力。
-
-## 何時用 / 何時不用
-
-**用本 skill 的情境**
-- 想知道一段 code 是否好讀、新人接手會不會卡
-- 想列出「讀這段時會在哪裡停頓、跳去哪裡、會誤解什麼」
-- PR review 時想專門看可讀性向度
-
-**不用本 skill 的情境**
-- 找 bug、邊界條件、race condition → 用 `code-review-excellence`
-- 檢查分層架構 / 依賴方向 / API 規範 → 用專案的 `code-review`
-- 找重複 code、效能問題、直接動手修 → 用 `simplify`
-- 安全審查 → 用 `security-review`
 
 ## 理論立場：Ousterhout 派
 
-本 skill 採 John Ousterhout《A Philosophy of Software Design》立場，明確反對 Robert Martin《Clean Code》的部分教條。Why：Martin 自己的 prime generator 範例在拆細後效能掉 3-4 倍，後來又自己合回去，實證證實 Ousterhout 的「information locality」優先於「function 越短越好」。
+採 John Ousterhout《A Philosophy of Software Design》立場，明確反對 Robert Martin《Clean Code》的部分教條。Why：Martin 自己的 prime generator 範例在拆細後效能掉 3-4 倍，後來又自己合回去，實證證實「information locality」優先於「function 越短越好」。
 
-| 議題 | Clean Code (Martin) | A Philosophy of Software Design (Ousterhout) | 本 skill 採用 |
+| 議題 | Clean Code (Martin) | A Philosophy of Software Design (Ousterhout) | 本方法採用 |
 |---|---|---|---|
 | function 長度 | 2-4 行最好 | 看「讀懂要跳幾處」，太碎反而 entanglement | Ousterhout：行數是參考，跳轉次數才是主訊號 |
 | 註解 | 是 expressiveness 失敗 | 解釋 WHY 不可取代 | Ousterhout：缺 WHY 算 finding；只描述 WHAT 的註解才是 noise |
 | 過度抽象 | 切越細越好 | "shallow methods" 增加負擔 | Ousterhout：只被叫一次又跟原處糾纏的抽出 = 反模式 |
 
 **核心定義**：可讀性 = cognitive load（讀者腦中要同時 hold 的資訊量）+ information locality（相關邏輯是否放在一起，讀者不用跳）。
+
+---
 
 ## 強制流程：兩遍掃描
 
@@ -73,6 +58,8 @@ allowed-tools:
 
 「新奇性」與「一致性」要先用 Grep 抽樣 codebase 周圍幾個檔，確認真的是這個 codebase 的少數案例，才算 finding。
 
+---
+
 ## Finding 輸出格式
 
 每個 finding 必須有以下 5 欄，缺一不可：
@@ -87,45 +74,32 @@ allowed-tools:
 
 報告開頭給總結：「本次冷讀共記錄 N 個事件，其中 M 個觸發 heuristic 成為 finding；K 個只是停頓但沒命中訊號，標為 fyi」。
 
+---
+
 ## 自我節制規則（防退化關鍵）
 
-這四條是 skill 的紅線。每寫一個 finding 前先過一遍。
+這四條是紅線。每寫一個 finding 前先過一遍。
 
 ### 1. 每個 finding 必須綁到可觀察訊號
-
 禁止停在「這名字不好」「這段有點亂」這種品味話。Why：可讀性主觀，不綁訊號就會退化成審美。每個 finding 都要能講出「讀者要跳 N 次」「行數 X > 50」「跨度 Y > 20 行」「縮排 Z > 2」這種可數的東西。
 
-**範例**
 - ❌ 「`process` 這名字太籠統」
 - ✅ 「`process` 是 47:5；要理解它有沒有 side effect 需跳去 `service.ts:120`、`event-emitter.ts:88`、`db.ts:34` 三處——觸發『function 形狀』的『跳轉 ≥ 3 個方法』訊號」
 
 ### 2. 禁止以「應該更短」為唯一理由建議拆 function
-
-Why：Ousterhout 警告，拆出來只被叫一次又跟原處 entangled 的 shallow method，反而增加讀者負擔（要在多處之間跳）。
-
-要建議拆 function，**必須證明拆完後 Pass 1 的跳轉次數會減少**，例如「拆出 `validatePayload` 後，原 function 從 80 行降到 30 行，且新 function 有清楚的單一輸入/輸出，讀主流程的人不用再讀 validation 細節」。
-
-不能只說「這 function 太長」就要求拆。
+Why：Ousterhout 警告，拆出來只被叫一次又跟原處 entangled 的 shallow method，反而增加讀者負擔。要建議拆 function，**必須證明拆完後 Pass 1 的跳轉次數會減少**（例如「拆出 `validatePayload` 後，原 function 從 80 行降到 30 行，且新 function 有清楚單一輸入/輸出，讀主流程的人不用再讀 validation 細節」）。不能只說「這 function 太長」就要求拆。
 
 ### 3. 禁止建議刪掉解釋 WHY 的註解
-
-Why：Clean Code 教派最大的歷史錯誤是把所有註解視為失敗，導致大量「為什麼用這個 magic number / 這個 workaround / 這個非直覺順序」的知識永久遺失。
-
-可以建議刪掉的註解：純粹覆述 code 在做什麼的（例如 `// increment i` 前面就是 `i++`）。
-**不可以**建議刪掉的註解：解釋為什麼這樣做、為什麼不用看似更簡單的方法、外部約束（API 限制、相容性要求、bug workaround）的。
-
-不確定一條註解是 WHAT 還是 WHY 時，預設保留。
+Why：Clean Code 教派最大的歷史錯誤是把所有註解視為失敗，導致大量「為什麼用這個 magic number / workaround / 非直覺順序」的知識永久遺失。可以建議刪的：純粹覆述 code 在做什麼的（`// increment i` 前面就是 `i++`）。**不可以**刪：解釋為什麼這樣做、為什麼不用看似更簡單的方法、外部約束（API 限制、相容性、bug workaround）的。不確定是 WHAT 還是 WHY 時，預設保留。
 
 ### 4. 語境優先
+若該段 code 跟周圍 code 的風格 / 命名 / 結構是一致的，即使違反某條 heuristic，也降級為 "fyi" 而非 finding。Why：在已建立慣例的 codebase 裡，一致性對讀者比「絕對更好」更重要——讀者已建立的 mental model 比 heuristic 更值錢。例如整個 codebase 都用 2 字元縮寫的 model 變數（`u` for user），新檔案也這樣時，「識別字 < 3 字元」降為 fyi。
 
-若該段 code 跟周圍 code 的風格 / 命名 / 結構是一致的，即使違反某條 heuristic，也降級為 "fyi" 而非 finding。Why：在已建立慣例的 codebase 裡，一致性對讀者來說比「絕對更好」更重要——讀者已經建立的 mental model 比 skill 的 heuristic 更值錢。
-
-例如：整個 codebase 都用 2 字元縮寫的 model 變數（`u` for user, `o` for order），新檔案也這樣寫時，「識別字 < 3 字元」降為 fyi。
+---
 
 ## 範例：好的 finding vs 壞的 finding
 
 ### 好的 finding
-
 ```
 - 位置：order-service.ts:88-145
 - 卡點類型：跳轉
@@ -133,14 +107,13 @@ Why：Clean Code 教派最大的歷史錯誤是把所有註解視為失敗，導
   判斷 ctx 裡哪些欄位會被讀到，得跳去 discount-engine.ts:34 看
   applyDiscount 的實作，再跳回原處才能繼續理解後面的邏輯。
 - 觸發的 heuristic：function 形狀（要跳 ≥ 3 個方法才懂）+ 命名
-  （ctx 過於籠統，第二字元就是泛詞 context）
+  （ctx 過於籠統）
 - 重寫建議：在 88 行的 function signature 上方加一行註解說明
   ctx 中 applyDiscount 會用到的欄位（campaignId, userTier），或把
   applyDiscount 的 signature 改成顯式接收這兩個欄位。
 ```
 
 ### 壞的 finding（會被自我節制規則擋下）
-
 ```
 - 位置：order-service.ts:88
 - 卡點類型：停頓
@@ -148,15 +121,11 @@ Why：Clean Code 教派最大的歷史錯誤是把所有註解視為失敗，導
 - 觸發的 heuristic：function 形狀
 - 重寫建議：應該拆成幾個 private method
 ```
+被擋下的理由：「太長很累」不是可觀察訊號（違反規則 1）；「應該拆」沒證明拆完跳轉次數會減少（違反規則 2）；沒指出具體要拆出哪些單元。
 
-被擋下的理由：
-- 「太長很累」不是可觀察訊號（違反規則 1）
-- 「應該拆成幾個 private method」沒證明拆完後跳轉次數會減少（違反規則 2）
-- 沒指出具體要拆出哪些單元、拆完讀主流程的人少看了什麼
+---
 
 ## 報告結構
-
-最終回覆給使用者的格式：
 
 ```markdown
 ## Readability Review: [檔案/範圍]
@@ -171,6 +140,5 @@ Why：Clean Code 教派最大的歷史錯誤是把所有註解視為失敗，導
 - [簡述位置與情況]
 
 ### 整體印象（選填）
-一段話描述讀完整段 code 的腦內負擔感受，例如「主流程清晰但
-errorhandling 散落在三處導致每讀一段都要回頭」。
+一段話描述讀完整段 code 的腦內負擔感受。
 ```
