@@ -19,30 +19,28 @@
 
 ## 安裝
 
-Claude Code 會從 `~/.claude/skills/` 載入 user-level skills。把這個 repo 的 skills 掛進去即可：
+### 方法一：Plugin marketplace（推薦）
 
-### 方法一：Symlink（推薦，方便 `git pull` 更新）
+在 Claude Code 裡一次裝整包：
+
+```
+/plugin marketplace add lystyp/useful-skill
+/plugin install useful-skills@daniel-useful-skills
+```
+
+之後 repo 有更新，用 `/plugin marketplace update daniel-useful-skills` 就能拉到最新。
+
+> `code-review-skill` 是外部 git submodule，不會跟著 plugin 一起裝；需要的話請去它的 upstream（[awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill)）另外安裝。
+
+### 方法二：手動 symlink 個別 skill
+
+只想挑幾支、或不走 plugin，就把要的 skill 連進 `~/.claude/skills/`：
 
 ```bash
 git clone --recursive https://github.com/lystyp/useful-skill.git ~/useful-skill
 mkdir -p ~/.claude/skills
-ln -s ~/useful-skill/skills/research-industry-practices ~/.claude/skills/research-industry-practices
-ln -s ~/useful-skill/skills/project-conventions        ~/.claude/skills/project-conventions
-ln -s ~/useful-skill/skills/commit                     ~/.claude/skills/commit
-ln -s ~/useful-skill/skills/learn-from-known           ~/.claude/skills/learn-from-known
-ln -s ~/useful-skill/skills/code-review-skill          ~/.claude/skills/code-review-skill
-ln -s ~/useful-skill/skills/test-writing-style         ~/.claude/skills/test-writing-style
-ln -s ~/useful-skill/skills/ai-family-backend-style    ~/.claude/skills/ai-family-backend-style
-ln -s ~/useful-skill/skills/grill-me                   ~/.claude/skills/grill-me
-ln -s ~/useful-skill/skills/isolated-worktree-session  ~/.claude/skills/isolated-worktree-session
-ln -s ~/useful-skill/skills/design-sparring-partner    ~/.claude/skills/design-sparring-partner
+ln -s ~/useful-skill/skills/design-sparring-partner ~/.claude/skills/design-sparring-partner
+# 其餘照樣挑要的連過去
 ```
 
-### 方法二：直接複製
-
-```bash
-git clone --recursive https://github.com/lystyp/useful-skill.git
-cp -R useful-skill/skills/* ~/.claude/skills/
-```
-
-也可以只挑需要的 skill 安裝。專案層級的 skill 則放到 `<project>/.claude/skills/`。
+專案層級的 skill 則放到 `<project>/.claude/skills/`。

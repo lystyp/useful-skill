@@ -1,0 +1,10 @@
+{
+  "name": "useful-skills",
+  "description": "Daniel 的個人開發方法論 skill 庫（設計協作 / 可讀性 / 分層架構 / 研究實務 / TDD 風格）",
+  "version": "0.1.0",
+  "author": {
+    "name": "Daniel Shih",
+    "email": "lystyp87015@gmail.com"
+  },
+  "keywords": ["skills", "design", "collaboration", "readability", "architecture"]
+}

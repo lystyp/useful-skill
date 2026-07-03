@@ -1,0 +1,20 @@
+{
+  "name": "daniel-useful-skills",
+  "owner": {
+    "name": "Daniel Shih",
+    "email": "lystyp87015@gmail.com"
+  },
+  "metadata": {
+    "description": "Daniel 的個人開發方法論 skill 庫（設計協作 / 可讀性 / 分層架構 / 研究實務 / TDD 風格…）",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "useful-skills",
+      "source": "./",
+      "description": "個人開發方法論 skills：design-sparring-partner（協作姿態，內含分層架構／可讀性冷讀／設計模式對照 references）、research-industry-practices、project-conventions、test-writing-style、grill-me、learn-from-known、commit、isolated-worktree-session、ai-family-backend-style",
+      "version": "0.1.0",
+      "strict": true
+    }
+  ]
+}
