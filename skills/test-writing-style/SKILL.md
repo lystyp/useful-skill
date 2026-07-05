@@ -1,6 +1,6 @@
 ---
 name: test-writing-style
-description: Unit Test 與 Integration Test 的寫作風格規範：檔頭註解、測試命名、段落排版、import 分群、斷言寫法、錯誤路徑組織。與 write-unit-test（方法論：測什麼、何時 mock）互補，本 skill 專注在「測試程式碼本身怎麼排版、怎麼寫註解、怎麼組織結構」。當撰寫或 review 測試程式碼的格式與風格時使用。
+description: Unit Test 與 Integration Test 的寫作風格規範：檔頭註解、測試命名、段落排版、import 分群、斷言寫法、錯誤路徑組織。本 skill 專注在「測試程式碼本身怎麼排版、怎麼寫註解、怎麼組織結構」。當撰寫或 review 測試程式碼的格式與風格時使用。
 user-invocable: false
 ---
 
@@ -8,7 +8,7 @@ user-invocable: false
 
 本 skill 規範測試程式碼的**排版、註解、命名、結構**。不綁定語言或框架，但範例以 TypeScript + Jest 風格呈現（觀念通用）。
 
-> 與 `write-unit-test` 的分工：`write-unit-test` 管「測什麼、怎麼選 mock 策略」，本 skill 管「測試程式碼怎麼寫才好讀好維護」。
+> 本 skill 只管「測試程式碼怎麼寫才好讀好維護」（排版、命名、斷言、結構）；「測什麼、怎麼選 mock」的方法論不在範圍內。
 
 ---
 
@@ -274,6 +274,12 @@ expect(order.totalAmount).toBe(300);
 expect(order.createdAt).toBeInstanceOf(Date);  // 不必要
 expect(order.updatedAt).toBeInstanceOf(Date);  // 不必要
 ```
+
+**toMatchObject vs toEqual — 用哪個看「這物件多一個欄位時，測試該不該紅」：**
+- **該紅**（你擁有整個形狀、多一欄＝bug 或洩漏）→ `toEqual` 把整包 pin 住。適用：assembled 輸出 / mapper 結果 / 小 value object / **要發出去的 wire payload**（多一欄可能是洩漏、少一欄是壞掉，就是要它變動時強迫你回來確認）。
+- **不該紅**（物件帶有你不擁有、不關心的附帶欄位，如 DB record 的 id / createdAt / updatedAt）→ `toMatchObject` 只驗你關心的。
+
+注意上面那個 `❌ 比對所有欄位` 是**逐欄 `.toBe()`**（脆弱、又漏驗沒列到的欄位）——它跟整包 `toEqual({...})` 是兩回事。toMatchObject 是「大物件、只 care 幾欄」的預設；但當**確切形狀本身就是契約**時（尤其對外 payload），toEqual 才對，別為了怕「加欄位就壞」而把該 pin 死的契約放掉。
 
 ### 7.3 巢狀部分比對用 `expect.objectContaining`
 
