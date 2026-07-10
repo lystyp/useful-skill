@@ -12,7 +12,7 @@
     {
       "name": "useful-skills",
       "source": { "source": "url", "url": "https://github.com/lystyp/useful-skill.git" },
-      "description": "個人開發方法論 skills：design-sparring-partner（協作姿態，內含分層架構／可讀性冷讀／設計模式對照 references）、research-industry-practices、project-conventions、test-writing-style、grill-me、learn-from-known、commit、isolated-worktree-session、ai-family-backend-style",
+      "description": "個人開發方法論 skills：design-sparring-partner（協作姿態，內含分層架構／可讀性冷讀／設計模式對照 references）、research-industry-practices、project-conventions、test-writing-style、grill-me、learn-from-known、commit、isolated-worktree-session、ai-family-backend-style、useful-tools（實用工具設定集：Claude Code 完成通知等）",
       "version": "0.1.0",
       "strict": true
     }
