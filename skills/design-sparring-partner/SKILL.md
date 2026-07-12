@@ -61,6 +61,7 @@ description: >-
 - **變化軸常不只一條，而且藏在不同層級。** 最容易犯：某一層已經有抽象了（儲存格式 CSV／Sheet），就以為「抽象已經有了」，而沒看到**真正在變的是另一層**（輸出媒介 grid／DB，更高一層）。動手前先問：「這需求裡，哪些東西會各自獨立改變？分別在哪個層級？」列出來再決定。
 - **依賴方向：高層依賴抽象、不依賴細節（DIP）。** orchestrator／高層流程只 import 介面，不 import 具體 adapter；具體實作在一個 wiring 檔（如 `sources.ts`／`sinks.ts`）集中組裝，換實作只動那一個檔。這跟 §3「共享契約一改就一次掃乾淨所有耦合點」是同一個乾淨邊界的兩面。
 - **設計模式是「具名的邊界解法」，不是裝飾。** 選對模式他能一眼判斷；選錯或硬塞跟不抽象一樣糟。模式對照表（Strategy／Adapter／Repository…）與「過度／不足」氣味清單見 [references/patterns.md](references/patterns.md)。
+- **決定要用模式時，就照 GoF 正典形式落地、別自創四不像。** 上一條決定「該不該用模式」（照軸判準）；這條管「決定用了之後怎麼用」——一旦確定要用模式捕捉某條真軸，就忠於 GoF 那套的**正典結構與正確命名**：Strategy 就長成 Strategy、Repository 就是 Repository、Adapter 就守住它的介面邊界，別退化成 `AbstractFactoryStrategyManager` 這種雜揉多模式、叫不出單一意圖的變體。litmus：**一句話講得出「這是哪個 GoF 模式、它捕捉哪條軸」嗎？** 講不出＝你在硬湊、不是在用模式。這條**不鬆綁**本節開頭「軸為假就別抽象」——嚴格遵守 GoF 是指**用的時候忠於正典**，不是**沒事找地方套模式**。
 - **產出是分層後端 / service 時，結構・命名・主流程呈現照 [references/layered-architecture.md](references/layered-architecture.md)。** 三層（進入點 → service → repository）、命名表達**用途**不表達模式（`s3-service` 勝過 `sink`；別用 `manager` / `helper` 當雜物櫃）、主流程在進入點層讀成一條線（別散在 orchestrator/interface/factory 多檔）、以及「怎麼把架構描述給使用者」的輸出格式，都在那份。「該不該抽象」看本節上面；「抽了長什麼形狀」看那份。
 
 - **分辨 essential vs coincidental。** 不要因為幾個東西「今天剛好長一樣」就抽象合併——判準是「未來會不會一起變」，不是「現在像不像」。錯的抽象比重複更貴。

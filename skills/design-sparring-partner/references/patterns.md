@@ -65,3 +65,51 @@
 - 如果兩個模組總是因為同一個理由被一起改 → 該合。
 
 職責的邊界 = 變化理由的邊界。這跟「變化軸」是同一件事的一體兩面。
+
+## 七、GoF 23 個模式速查（正典意圖對照）
+
+**GoF ＝ Gang of Four**：《Design Patterns: Elements of Reusable Object-Oriented Software》(1994) 四位作者 Gamma／Helm／Johnson／Vlissides 的暱稱。書裡收 **23 個物件導向設計模式**，分三類。列在這是給 §4「決定要用模式時忠於 GoF 正典形式」一張對照——先認出「我要用的是哪一個、它的正典意圖是什麼」，再照那個意圖落地，別把名字借來、結構卻長成別的東西（四不像）。
+
+> 讀法承 §一：**永遠是「軸 → 模式」**。這張表是「認出軸之後，去哪對正典意圖」，不是「翻目錄找個模式來套」。沒有真軸就別開這張表。
+
+**Creational（怎麼把物件生出來）**
+
+| 模式 | 正典意圖（捕捉的軸） |
+|---|---|
+| Factory Method | 建哪個具體類別，延後給子類／呼叫點決定 |
+| Abstract Factory | 成套建立「一族」相關物件，整族可整組替換 |
+| Builder | 複雜物件分步組裝；同一組裝流程產不同表示 |
+| Prototype | 用複製既有實例來建新物件（省昂貴初始化） |
+| Singleton | 保證全域唯一實例、給統一存取點 |
+
+**Structural（物件怎麼組裝在一起）**
+
+| 模式 | 正典意圖（捕捉的軸） |
+|---|---|
+| Adapter | 把既有介面「轉接」成 caller 要的介面 |
+| Bridge | 抽象與實作各自獨立變化，不綁死在一起 |
+| Composite | 樹狀結構；單體與群體用同一介面對待 |
+| Decorator | 不改原類別，動態一層層疊加行為 |
+| Facade | 對複雜子系統提供一個窄的統一入口 |
+| Flyweight | 大量細粒度物件共享共通狀態，省記憶體 |
+| Proxy | 用替身控管對真正物件的存取（延遲／權限／遠端） |
+
+**Behavioral（物件之間怎麼分工、互動）**
+
+| 模式 | 正典意圖（捕捉的軸） |
+|---|---|
+| Chain of Responsibility | 請求沿處理鏈往下傳，直到有人接手 |
+| Command | 把「一個請求」封裝成物件（可排隊／記錄／undo） |
+| Interpreter | 為一種小語言定義文法並解譯它 |
+| Iterator | 不暴露內部結構下，逐一走訪集合元素 |
+| Mediator | 用中介者集中原本網狀的物件互動 |
+| Memento | 擷取／還原物件狀態，又不破壞其封裝 |
+| Observer | 一對多通知：狀態一變，自動通知所有訂閱者 |
+| State | 內部狀態改變時，行為跟著換（狀態機） |
+| Strategy | 同一件事有多種可替換演算法 |
+| Template Method | 演算法骨架固定，個別步驟由子類填 |
+| Visitor | 對既有物件結構加新操作，而不改元素類別 |
+
+**幾個常被誤當 GoF 的：** Repository、Middleware／Interceptor、Dependency Injection、MVC 都**不在**這 23 個裡（是後來 Fowler／框架圈的補充）；§一對照表混用它們是因為好用，不是因為它們是 GoF。用時一樣「忠於各自正典」即可。
+
+**別跟 GRASP 搞混：** GRASP（Information Expert／Creator／Controller／Low Coupling／High Cohesion／Protected Variations…）是**責任分配原則**，回答「這個職責該擺哪個物件」，不是這種具名結構；§六 的 SRP 走的是那一套。GoF 給你「具名結構」，GRASP 給你「擺放職責的判準」，兩者互補、別混為一談。
