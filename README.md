@@ -16,7 +16,7 @@
 | [grill-me](skills/grill-me/) | 對使用者的 plan / design 進行連環追問，沿著決策樹一個分支一個分支收斂，每題都附上建議答案，每次只問一題；可由 codebase 回答的就直接探索。鏡像自 [mattpocock/skills/grill-me](https://github.com/mattpocock/skills/tree/main/grill-me)。 |
 | [isolated-worktree-session](skills/isolated-worktree-session/) | 平行多 session 改 code 時避免互相污染。**不自動觸發** —— 使用者要改 code 時，先問要不要啟用；同意後從 HEAD 切 temp branch + 開 worktree、嚴格鎖定 session 在 worktree 內、結束時詢問是否 cherry-pick 回原 branch。 |
 | [design-sparring-partner](skills/design-sparring-partner/) | 不教寫某種 code，而是定義「跟使用者做非瑣碎開發時 AI 該有的協作姿態」：① 先診斷對齊、不急著產 code 並嚴守 scope guard；② 設計決策用「攤牌式」攤開思路與權衡軸、反 sycophancy（雙向）；③ 一切對著 code 驗證不憑記憶；④ 抵抗過度工程，含變化軸／DIP 抽象判準（essential vs coincidental、≥2 實作或被點名才抽象、依賴方向、聆聽變化軸訊號）；⑤ 尊重使用者主導的節奏與乾淨 diff。附具體慣例 references：patterns（設計模式↔變化軸）、layered-architecture（分層結構/命名/主流程呈現）、readability-review（兩遍冷讀方法論）。 |
-| [useful-tools](skills/useful-tools/) | 實用工具設定集，每個工具一份 reference（完整設定步驟＋原理解說＋排查 SOP）。目前收錄：claude-code-stop-notification —— Claude Code 回覆完成時發 macOS 通知（內容帶當輪提問、點通知跳回對應專案的 VSCode 視窗；Stop hook + terminal-notifier 實作，含勿擾模式踩雷指南）。 |
+| [useful-tools](skills/useful-tools/) | 實用工具設定集，每個工具一份 reference（完整設定步驟＋原理解說＋排查 SOP）。目前收錄：claude-code-notifications —— Claude Code 的 macOS 通知（含回覆完成通知與 AskUserQuestion 問句通知，內容帶當輪提問／問題文字、點通知跳回對應專案的 VSCode 視窗；terminal-notifier 實作，含勿擾模式踩雷指南）。 |
 
 ## 安裝
 
