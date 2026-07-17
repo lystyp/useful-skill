@@ -28,6 +28,7 @@ disable-model-invocation: true
 
 ## 注意事項
 
+- **訊息中不得出現任何 AI attribution**：不加 `Co-Authored-By: Claude ...`，也不加 `🤖 Generated with Claude Code` 之類的標記。這條必須明寫——預設行為會自動補上 trailer，沒有明令禁止就會被加進去。
 - 不要自動 push，除非使用者明確要求
 - commit 訊息使用 HEREDOC 格式傳遞，確保格式正確
 - 不要使用 `git add -A` 或 `git add .`，應列出具體檔案讓使用者確認
