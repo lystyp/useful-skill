@@ -18,6 +18,9 @@
 | [design-sparring-partner](skills/design-sparring-partner/) | 不教寫某種 code，而是定義「跟使用者做非瑣碎開發時 AI 該有的協作姿態」：① 先診斷對齊、不急著產 code 並嚴守 scope guard；② 設計決策用「攤牌式」攤開思路與權衡軸、反 sycophancy（雙向）；③ 一切對著 code 驗證不憑記憶；④ 抵抗過度工程，含變化軸／DIP 抽象判準（essential vs coincidental、≥2 實作或被點名才抽象、依賴方向、聆聽變化軸訊號）；⑤ 尊重使用者主導的節奏與乾淨 diff。附具體慣例 references：patterns（設計模式↔變化軸）、layered-architecture（分層結構/命名/主流程呈現）、readability-review（兩遍冷讀方法論）。 |
 | [useful-tools](skills/useful-tools/) | 實用工具設定集，每個工具一份 reference（完整設定步驟＋原理解說＋排查 SOP）。目前收錄：claude-code-notifications —— Claude Code 的 macOS 通知（含回覆完成通知與 AskUserQuestion 問句通知，內容帶當輪提問／問題文字、點通知跳回對應專案的 VSCode 視窗；terminal-notifier 實作，含勿擾模式踩雷指南）。 |
 | [jira](skills/jira/) | 用 Jira Cloud REST API v3 查詢與操作 issue：JQL 搜尋、讀單票、建立 / 更新 / comment / 轉狀態。透過純 stdlib 的 `jira.py` wrapper，已處理好 Basic Auth、ADF 格式轉換、`/search/jql` cursor 分頁三個易踩雷點；憑證從 `JIRA_BASE_URL` / `JIRA_EMAIL` / `JIRA_API_TOKEN` 環境變數讀，不寫進檔案。寫入類操作動到真 Jira，執行前先跟使用者確認。 |
+| [code-review](skills/code-review/) | 逐項審一份改動——本地 branch diff、GitHub PR（`gh`）、GitLab MR（`glab`）、或指定路徑皆可。**先讀懂改動目的**（PR/MR 描述或 commit 訊息）再開審，用「目的對齊 / 完整性 / 副作用」三視角與 checklist 並列。12 個面向各一份 `handlers/*.md`：可讀性 / 註解品質 / 函式控制流 / DRY / 單一職責 / 擴充性 / 耦合內聚 / 型別與資料形狀 / 錯誤處理 / 累積教訓 / API 健壯性 / 安全性(OWASP)；各派一個 subagent 只扛一份、再各派一個 critic 覆核覆蓋率與證據——**舉不出行號的 PASS 一律改判 UNSURE，禁空證據 PASS**。fan-out 前先報成本取得同意；預設只出清單不改 code。可讀性類問題強制成獨立一桶呈現，不得在 triage 被「嚴重度低」無聲過濾。語言與框架中立。 |
+| [review-finding-format](skills/review-finding-format/) | review 問題的呈現格式，`code-review` 與 `pr-inline-comment` 共用同一套（所以 review 完的內容可直接發成留言）。每項含位置、問題、**🗣️ 白話情境**、建議解法。白話情境依 bug report 重現步驟的慣例寫：編號步驟、一行一動作、最短路徑、以「預期：… 實際：…」收尾——並發情境用「請求 A / 請求 B」交錯步驟表達，不標絕對時間。 |
+| [pr-inline-comment](skills/pr-inline-comment/) | 把問題發成 GitHub PR 或 GitLab MR 的 inline 留言（發 / 改 / 刪）。處理好三個踩雷點：commit SHA 取得、新增 / 刪除 / 未變動行各自的行號錨定規則、以及 **行號必須以整數送出**——用 `-f` 送成字串會讓 GitLab 靜默丟棄整個 position、把留言降級成不掛在任何行上的一般留言。附「確認確實是 inline」的驗證指令。 |
 
 ## 安裝
 
