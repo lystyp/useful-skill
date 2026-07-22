@@ -9,7 +9,7 @@ description: **只在使用者明確同意後才啟用**。不要自動觸發。
 
 從目前 HEAD 切一條 **temp branch**，並為它開一個 **worktree**。整個 session 只在這個 worktree 裡活動 —— 不讀、不寫、不 grep、不 glob、不 cd 到 worktree 以外的任何地方。做完之後，主動詢問使用者要不要把新 commit cherry-pick 回原 branch，然後刪掉 temp branch 與 worktree。
 
-**核心原則：** 目錄硬隔離。之前有 session 把隔壁目錄（另一個平行 session 改到一半的檔案）讀進來當作參考，結果回報了一堆「假 bug」。所以一旦啟用，這裡不是建議，是硬規定。
+**核心原則：** 目錄硬隔離，**雙向**。(1) 你不去讀 worktree 外的任何東西 —— 之前有 session 把隔壁目錄（另一個平行 session 改到一半的檔案）讀進來當參考，結果回報了一堆「假 bug」。(2) worktree 本身開在 repo root **外面**（sibling 目錄），別的 session 掃 repo root 也讀不到你。所以一旦啟用，這裡不是建議，是硬規定。
 
 ## Step 0：先取得使用者同意
 
@@ -64,14 +64,14 @@ SLUG="<task-slug>"
 # 處理原 branch 名稱裡的 /
 SAFE_ORIG="${ORIGINAL_BRANCH//\//-}"
 TEMP_BRANCH="tmp/${SAFE_ORIG}-${SLUG}-${TIMESTAMP}"
-WORKTREE_DIR="${REPO_ROOT}/.worktrees/${SAFE_ORIG}-${SLUG}-${TIMESTAMP}"
+# ⚠️ worktree 一定要開在 repo root 「外面」（sibling 目錄），不要開在 ${REPO_ROOT}/.worktrees/ 裡。
+# 開在 repo 內的話，別的 session 從 repo root 做 find / cat / 絕對路徑 Read / 非 gitignore-aware 的 grep，
+# 就會走進來讀到你改到一半的檔（.gitignore 只擋 git 本身與會尊重 gitignore 的工具，擋不了上面那些）。
+# 放到 repo 外，任何掃 repo root 的 session 都碰不到你 → 隔離才是雙向的。
+WORKTREE_DIR="${REPO_ROOT}.worktrees/${SAFE_ORIG}-${SLUG}-${TIMESTAMP}"
 
-# 確認 .worktrees/ 已加入 .gitignore，沒有就補上並 commit
-if ! git -C "$REPO_ROOT" check-ignore -q .worktrees 2>/dev/null; then
-  echo ".worktrees/" >> "$REPO_ROOT/.gitignore"
-  git -C "$REPO_ROOT" add .gitignore
-  git -C "$REPO_ROOT" commit -m "chore: ignore .worktrees"
-fi
+# 先建好 sibling 父目錄（git worktree add 不會自動建父層）
+mkdir -p "${REPO_ROOT}.worktrees"
 
 # 從「當前 HEAD」開 worktree（不是從 main，也不是從 origin/main）
 git -C "$REPO_ROOT" worktree add "$WORKTREE_DIR" -b "$TEMP_BRANCH" HEAD
@@ -225,7 +225,7 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 | Step | 做什麼 | 為什麼 |
 |------|-------|-------|
 | 1 | 偵測現有 worktree | 不要巢狀 |
-| 2 | 從 HEAD 切 `tmp/...` branch + 在 `.worktrees/...` 開 worktree | 工作區隔離 |
+| 2 | 從 HEAD 切 `tmp/...` branch + 在 repo root **外**（`<repo>.worktrees/...` sibling）開 worktree | 工作區隔離（雙向：別人也讀不到你） |
 | 3 | 把 session 鎖在 `$WORKTREE_DIR` | 防止 session 間互相污染 |
 | 4 | 正常改 code + commit | 進度推進 |
 | 5 | 整合前先問 | 由使用者把關 |
@@ -236,7 +236,7 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 ### 為了「看 context」偷讀 parent / sibling dir
 
-❌ `Read /Users/daniel/Heph/ai_family_backend/backend/some-file`（當 WORKTREE_DIR 是 `.worktrees/foo/` 時）
+❌ `Read /Users/daniel/Heph/ai_family_backend/backend/some-file`（當 WORKTREE_DIR 是 repo 外的 `ai_family_backend.worktrees/foo/` 時）
 **為什麼錯：** 那個檔案可能正被另一個 session 改到一半。
 **怎麼改：** 只讀 `$WORKTREE_DIR` 裡的檔案。需要歷史 context 就用 `git log` / `git show`，**而且要在 worktree 內跑**。
 
@@ -258,10 +258,10 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 **為什麼錯：** 復原依據沒了，工作直接消失。
 **怎麼改：** 清理是**最後一步**，只在 cherry-pick 成功或使用者明確選擇丟掉之後才做。
 
-### 忘了把 `.worktrees/` 加進 `.gitignore`
+### 把 worktree 開在 repo root 裡面（`${REPO_ROOT}/.worktrees/...`）
 
-❌ Worktree 內容跑進主 checkout 的 `git status`。
-**怎麼改：** Step 2 已經內建檢查 + 自動補 .gitignore。
+❌ 開在 repo 內。別的 session 從 repo root 掃描（find / cat / 絕對路徑 Read / 非 gitignore-aware grep）會走進來讀到你改到一半的檔 —— 隔離只擋了「你讀別人」，沒擋「別人讀你」；`.gitignore` 也救不了（擋不了那些工具）。
+**怎麼改：** Step 2 把 worktree 開在 repo root **外面**的 sibling（`${REPO_ROOT}.worktrees/...`）。任何掃 repo root 的 session 都到不了。
 
 ### 「我只是 cd 上去一層看看 monorepo root」
 
