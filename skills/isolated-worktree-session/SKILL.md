@@ -1,40 +1,35 @@
 ---
 name: isolated-worktree-session
-description: **只在使用者明確同意後才啟用**。不要自動觸發。當使用者要修改 code 時，先用一句話詢問「要不要用 isolated-worktree-session？（從 HEAD 切 temp branch + worktree + 嚴格隔離 + 結束時詢問是否 cherry-pick）」；只有使用者明確說 Yes / 要 / 啟用 之後，才真正執行此 skill 的步驟。使用者沒同意就直接在當前目錄改。
+description: **只有使用者親手輸入 `/isolated-worktree-session` 才執行**。這是純手動呼叫的 skill：不自動觸發、不因為「要改 code」而觸發、也不要主動問使用者要不要啟用。使用者沒有用 `/` 開頭明確呼叫，就直接在當前目錄改 code，當作這個 skill 不存在。被呼叫後才執行：從 HEAD 切 temp branch + 開 worktree + 嚴格隔離 + 結束時詢問是否 cherry-pick。
 ---
 
 # Isolated Worktree Session（隔離工作流）
 
 ## 總覽
 
+**這是純手動 skill：只有使用者輸入 `/isolated-worktree-session` 才跑，見 Step 0。**
+
 從目前 HEAD 切一條 **temp branch**，並為它開一個 **worktree**。整個 session 只在這個 worktree 裡活動 —— 不讀、不寫、不 grep、不 glob、不 cd 到 worktree 以外的任何地方。做完之後，主動詢問使用者要不要把新 commit cherry-pick 回原 branch，然後刪掉 temp branch 與 worktree。
 
 **核心原則：** 目錄硬隔離，**雙向**。(1) 你不去讀 worktree 外的任何東西 —— 之前有 session 把隔壁目錄（另一個平行 session 改到一半的檔案）讀進來當參考，結果回報了一堆「假 bug」。(2) worktree 本身開在 repo root **外面**（sibling 目錄），別的 session 掃 repo root 也讀不到你。所以一旦啟用，這裡不是建議，是硬規定。
 
-## Step 0：先取得使用者同意
+## Step 0：確認觸發方式
 
-**這個 skill 不會自動觸發。** 當使用者要求改 code 時，必須先用一句話詢問：
+**唯一的觸發條件：使用者親手輸入 `/isolated-worktree-session`。**
 
-> 要不要用 **isolated-worktree-session** 隔離這次改動？（會從 HEAD 切 temp branch + 開 worktree，結束時問你要不要 cherry-pick 回來）
+只要不是這樣進來的，這個 skill 一律不執行 —— 直接在當前目錄改 code，當作沒這個 skill。
 
-- 使用者明確同意（Yes / 要 / 啟用 / 好 / 開）→ 繼續 Step 1
-- 使用者拒絕 / 沒回應 / 說「直接改就好」→ **不要用這個 skill**，直接在當前目錄改 code，整個 skill 都不用跑
-- 使用者沒講要不要，但要求快速的小修正（typo、改 log 等）→ 還是要問一次，不要自己決定
+不算觸發的情況（全部都要當沒看到）：
+- 使用者要改 code / schema / migration / config / 文件（不管改動多大）
+- 同一個 repo 有多個 session 在跑
+- 使用者提到「平行作業」「另一個 session」「隔離一下」「怕污染」
+- 你自己判斷「這次改動很危險，用隔離比較保險」
 
-確認啟用後，宣告：「啟用 isolated-worktree-session：先開 temp branch + worktree 再動 code。」
+**也不要主動問。** 「要不要用 isolated-worktree-session？」這句話不要講 —— 要用的時候使用者會自己打 `/`。多問一句就是把選擇成本丟回去給他。
 
-## 什麼時候用
+被 `/isolated-worktree-session` 呼叫後，宣告：「啟用 isolated-worktree-session：先開 temp branch + worktree 再動 code。」然後進 Step 1。
 
-**前提：使用者在 Step 0 已經明確同意。**
-
-適合提議啟用的情境：
-- 任何會改 code / schema / migration / config / 文件的任務
-- 同一個 repo 有多個 session 在跑時
-- 使用者提到「平行作業」「另一個 session」「隔離一下」
-
-**不適合提議的情境（這時連問都不用問，直接做）：**
-- 純看 code、純研究、完全不會碰 repo 狀態的調查
-- 已經在另一個 linked worktree 裡（Step 1 會偵測；如果已經在裡面，仍然套用 Step 3 的鎖定規則 —— 但仍要先問使用者要不要繼續沿用隔離規則）
+**例外：已經在 linked worktree 裡。** 就算沒被 `/` 呼叫，Step 1 的偵測若發現當前已在 linked worktree，仍要套用 Step 3 的鎖定規則（不要跑出去讀外面）—— 但不要新建 worktree，也不要跑 Step 5 之後的 cherry-pick 流程。
 
 ## Step 1：先偵測是不是已經在 worktree 裡
 
@@ -224,6 +219,7 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 | Step | 做什麼 | 為什麼 |
 |------|-------|-------|
+| 0 | 確認是被 `/isolated-worktree-session` 呼叫的 | 純手動 skill，沒被呼叫就整套不跑 |
 | 1 | 偵測現有 worktree | 不要巢狀 |
 | 2 | 從 HEAD 切 `tmp/...` branch + 在 repo root **外**（`<repo>.worktrees/...` sibling）開 worktree | 工作區隔離（雙向：別人也讀不到你） |
 | 3 | 把 session 鎖在 `$WORKTREE_DIR` | 防止 session 間互相污染 |
@@ -233,6 +229,12 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 | 7 | `git worktree remove` + `git branch -D` | 清乾淨 |
 
 ## 常見錯誤
+
+### 沒被 `/isolated-worktree-session` 呼叫就自己啟用（或主動問要不要啟用）
+
+❌ 使用者說「幫我改一下這段」，你就開 worktree；或先問一句「要不要用隔離工作流？」
+**為什麼錯：** 這是純手動 skill。自己啟用會憑空多出 temp branch 跟 cherry-pick gate；主動問則是每次改 code 都多一輪來回。
+**怎麼改：** 直接在當前目錄改。使用者想隔離時會自己打 `/isolated-worktree-session`。
 
 ### 為了「看 context」偷讀 parent / sibling dir
 
@@ -273,6 +275,8 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 下面任何一個念頭出現，代表你正準備違反規則：
 
+- 「這次改動有點大，我先幫他開個 worktree 比較安全」
+- 「先問一下他要不要用隔離工作流好了」
 - 「快速看一下 parent 目錄就好」
 - 「我 grep 整個 repo 找 reference」
 - 「讀另一個 worktree 比對一下」
@@ -287,6 +291,7 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 | 偷雞理由 | 真相 |
 |---------|------|
+| 「他沒打 `/`，但這種情境明顯該隔離」 | 要不要隔離是使用者的決定。沒打 `/` 就是不要。**不要自己啟用，也不要問。** |
 | 「Read-only 沒差啦，我又沒改」 | 讀到別的 session 的中間狀態會產生假 bug。**禁止。** |
 | 「我要看 parent dir 才能理解」 | 那就問使用者。不要偷看。 |
 | 「使用者明顯就想 cherry-pick」 | 他要的是 gate。每次都要問。 |
