@@ -1,6 +1,6 @@
 ---
 name: isolated-worktree-session
-description: **只有使用者親手輸入 `/isolated-worktree-session` 才執行**。這是純手動呼叫的 skill：不自動觸發、不因為「要改 code」而觸發、也不要主動問使用者要不要啟用。使用者沒有用 `/` 開頭明確呼叫，就直接在當前目錄改 code，當作這個 skill 不存在。被呼叫後才執行：從 HEAD 切 temp branch + 開 worktree + 嚴格隔離 + 結束時詢問是否 cherry-pick。
+description: **只有使用者親手輸入 `/isolated-worktree-session` 才執行**。這是純手動呼叫的 skill：不自動觸發、不因為「要改 code」而觸發、也不要主動問使用者要不要啟用。使用者沒有用 `/` 開頭明確呼叫，就直接在當前目錄改 code，當作這個 skill 不存在。被呼叫後才執行：從 HEAD 切 temp branch + 開 worktree + 把當前對話複製到 worktree 對應的 session 目錄（新視窗開 worktree 就能 resume 同一段對話）+ 嚴格隔離 + 結束時詢問是否 cherry-pick。
 ---
 
 # Isolated Worktree Session（隔離工作流）
@@ -9,7 +9,7 @@ description: **只有使用者親手輸入 `/isolated-worktree-session` 才執�
 
 **這是純手動 skill：只有使用者輸入 `/isolated-worktree-session` 才跑，見 Step 0。**
 
-從目前 HEAD 切一條 **temp branch**，並為它開一個 **worktree**。整個 session 只在這個 worktree 裡活動 —— 不讀、不寫、不 grep、不 glob、不 cd 到 worktree 以外的任何地方。做完之後，主動詢問使用者要不要把新 commit cherry-pick 回原 branch，然後刪掉 temp branch 與 worktree。
+從目前 HEAD 切一條 **temp branch**，並為它開一個 **worktree**，把 git 不會帶過去的 `.env` 補進去，然後把當前這段對話複製一份到 worktree 對應的 session 目錄 —— 使用者用新的 VS Code 開 worktree 時，就能在 resume 清單看到同一段對話並直接接下去。整個 session 只在這個 worktree 裡活動 —— 不讀、不寫、不 grep、不 glob、不 cd 到 worktree 以外的任何地方。做完之後，主動詢問使用者要不要把新 commit cherry-pick 回原 branch，然後刪掉 temp branch 與 worktree。
 
 **核心原則：** 目錄硬隔離，**雙向**。(1) 你不去讀 worktree 外的任何東西 —— 之前有 session 把隔壁目錄（另一個平行 session 改到一半的檔案）讀進來當參考，結果回報了一堆「假 bug」。(2) worktree 本身開在 repo root **外面**（sibling 目錄），別的 session 掃 repo root 也讀不到你。所以一旦啟用，這裡不是建議，是硬規定。
 
@@ -29,7 +29,9 @@ description: **只有使用者親手輸入 `/isolated-worktree-session` 才執�
 
 被 `/isolated-worktree-session` 呼叫後，宣告：「啟用 isolated-worktree-session：先開 temp branch + worktree 再動 code。」然後進 Step 1。
 
-**例外：已經在 linked worktree 裡。** 就算沒被 `/` 呼叫，Step 1 的偵測若發現當前已在 linked worktree，仍要套用 Step 3 的鎖定規則（不要跑出去讀外面）—— 但不要新建 worktree，也不要跑 Step 5 之後的 cherry-pick 流程。
+**例外：已經在 linked worktree 裡。** 就算沒被 `/` 呼叫，Step 1 的偵測若發現當前已在 linked worktree，仍要套用 Step 3 的鎖定規則（不要跑出去讀外面）—— 不要新建 worktree。至於做完要不要跑 cherry-pick 流程，看這個 worktree 裡有沒有 `.worktree-session-meta`：
+- **有** → 這個 worktree 是這套流程開的（很可能就是使用者換視窗接手的那份對話）。從裡面讀出 `ORIGINAL_BRANCH` / `ORIGINAL_HEAD` / `TEMP_BRANCH` / `REPO_ROOT`，Step 4 之後照跑，收尾由這邊負責。
+- **沒有** → 是別人的 worktree。只鎖定，不要跑 Step 5 之後的流程。
 
 ## Step 1：先偵測是不是已經在 worktree 裡
 
@@ -59,10 +61,8 @@ SLUG="<task-slug>"
 # 處理原 branch 名稱裡的 /
 SAFE_ORIG="${ORIGINAL_BRANCH//\//-}"
 TEMP_BRANCH="tmp/${SAFE_ORIG}-${SLUG}-${TIMESTAMP}"
-# ⚠️ worktree 一定要開在 repo root 「外面」（sibling 目錄），不要開在 ${REPO_ROOT}/.worktrees/ 裡。
-# 開在 repo 內的話，別的 session 從 repo root 做 find / cat / 絕對路徑 Read / 非 gitignore-aware 的 grep，
-# 就會走進來讀到你改到一半的檔（.gitignore 只擋 git 本身與會尊重 gitignore 的工具，擋不了上面那些）。
-# 放到 repo 外，任何掃 repo root 的 session 都碰不到你 → 隔離才是雙向的。
+# ⚠️ 一定要開在 repo root「外面」的 sibling，不要開在 ${REPO_ROOT}/.worktrees/ 裡
+# —— 開在 repo 內，別的 session 掃 repo root 就會讀到你改到一半的檔（見文末「常見錯誤」）
 WORKTREE_DIR="${REPO_ROOT}.worktrees/${SAFE_ORIG}-${SLUG}-${TIMESTAMP}"
 
 # 先建好 sibling 父目錄（git worktree add 不會自動建父層）
@@ -89,11 +89,52 @@ grep -qxF '.worktree-session-meta' .git/info/exclude 2>/dev/null \
   || echo '.worktree-session-meta' >> .git/info/exclude
 ```
 
+### 把 .env 帶過去（git 不會幫你）
+
+`.env` 幾乎都被 gitignore，所以 `git worktree add` 不會帶過去 —— 新的 worktree 少了環境變數，app 跟測試都跑不起來。而且它不一定在 repo 根目錄，monorepo 常常是 `backend/`、`frontend/` 底下各一份，所以要**保留相對路徑**複製：
+
+```bash
+git -C "$REPO_ROOT" ls-files -z --others --ignored --exclude-standard \
+    -- ':(glob)**/.env' ':(glob)**/.env.*' ':(exclude)**/node_modules/**' |
+  while IFS= read -r -d '' f; do
+    mkdir -p "$WORKTREE_DIR/$(dirname "$f")"
+    cp -p "$REPO_ROOT/$f" "$WORKTREE_DIR/$f"
+    echo "已帶入 $f"
+  done
+```
+
+`--others --ignored` 撈的是「沒被 git 追蹤、而且被 ignore」的檔案 —— 正好就是那些只存在本機的 `.env`。已經被追蹤的（`.env.example`、有些專案的 `.env.test`）本來就跟著 worktree 過去了，不會被重複處理，也不會蓋掉。
+
+這是**一次性快照**：之後改了原 repo 的 `.env`，worktree 那份不會跟著變。
+
+這一步一定要在 Step 3 上鎖**之前**做完 —— 鎖上之後就不能再回原 repo 拿東西了。
+
+## Step 2.5：把當前對話複製到 worktree
+
+worktree 開好了，但這段對話的記錄還躺在**原專案**的 session 目錄底下。使用者用新的 VS Code 開 worktree 時，resume 清單是照當前目錄去找的 —— 看不到這段對話，等於換個視窗就得從頭講一次。
+
+跑這支腳本把對話搬一份過去（`<skill 目錄>` 是這個 skill 載入時告訴你的 Base directory）：
+
+```bash
+python3 "<skill 目錄>/scripts/sync-session-to-worktree.py" "$WORKTREE_DIR"
+```
+
+它會從 `CLAUDE_CODE_SESSION_ID` 找出當前 transcript，算出 worktree 對應的 session 目錄，複製成一個新的 session id（連 sidecar 與 file-history 一起搬），並砍掉檔尾那個還沒有結果的 tool call —— 不砍的話複製過去的對話接不下去。為什麼要這樣做，腳本裡的 docstring 有寫。
+
+你要記得的只有三件事：
+
+- **複製的是執行當下的快照。** 之後又多講了幾輪，worktree 那份不會自己跟上 —— 使用者說要換視窗之前，把同一行再跑一次。
+- **重跑是覆蓋同一份**，不會愈積愈多（新 session id 記在 `.worktree-session-meta` 的 `COPIED_SESSION_ID`）。
+- **worktree 那份比來源長時，腳本會擋下來。** 那代表使用者已經在新視窗接續講了，那份才新，蓋下去會弄丟。真的要蓋才加 `--force`。
+
 回報給使用者：
 
 ```
 Worktree 已建立：$WORKTREE_DIR
 Temp branch：   $TEMP_BRANCH（從 $ORIGINAL_BRANCH @ ${ORIGINAL_HEAD:0:7} 切出）
+已帶入 .env：    <實際複製的檔案清單，例如 backend/.env>
+對話已複製：     <腳本印出的 to: 路徑>
+                用新的 VS Code 開 $WORKTREE_DIR，就能 resume 這段對話接著做。
 從現在開始，這個 session 只能在上面那個 worktree 裡活動。
 ```
 
@@ -127,18 +168,21 @@ esac
 - 路徑裡**不准出現 `..`**
 - 如果想碰的路徑不在 `$WORKTREE_DIR` 底下 → **停下來**。告訴使用者你想做什麼、為什麼，讓使用者決定。
 
+### 唯一的例外：Step 2.5 那支同步腳本
+
+`scripts/sync-session-to-worktree.py` 本身放在 skill 目錄、寫入的是 `~/.claude/projects/`，兩個都在 worktree 外面。要同步對話就照 Step 2.5 原樣再跑一次那一行，**不受上面的路徑檢查限制**。
+
+這不算破例偷看：它碰的是對話記錄，不是任何 repo 的工作檔，讀不到別的 session 改到一半的 code。反過來說，**例外就只有這一支** —— 不要因為「腳本可以出去」就自己延伸成「那我也去 `~/.claude` 翻一下別的東西」。
+
 ### 為什麼要這麼嚴
 
-同一個 repo 同時有兩個 session 在跑，代表 parent dir / sibling dir 裡都是「另一個 agent 改到一半」的檔案。讀進來會發生：
-- 對「不在你工作分支裡」的 code 回報假 bug
-- 對「其實還沒做完」的事誤判已經完成
-- 測試莫名失敗，因為混到不相容的狀態
-
-硬隔離是唯一的解法。
+「同一個 repo 而已，有什麼差」—— 差別是：平行 session 代表 worktree 外面那些檔案正被別人改到一半。讀進來就會對不在你分支裡的 code 回報假 bug、把還沒做完的事誤判成完成、讓測試莫名其妙紅掉。硬隔離是唯一的解法。
 
 ## Step 4：正常開發 + commit
 
 在 worktree 裡一切照常：要 install 就 install（`npm install` 等等）、改檔、跑測試、commit。所有 commit 都會落在 `$TEMP_BRANCH` 上。
+
+使用者只要說要換到 worktree 的視窗去做（「我開新的 VS Code 了」「你把對話同步一下」之類），就把 Step 2.5 那一行再跑一次，讓那邊拿到的是最新的對話而不是剛開 worktree 時的快照。
 
 ## Step 5：完成時 —— 先問再 cherry-pick
 
@@ -198,6 +242,8 @@ git worktree remove "$WORKTREE_DIR"
 git branch -D "$TEMP_BRANCH"
 ```
 
+複製過去的那份對話**留著不要動**。它躺在 `~/.claude/projects/` 底下，跟著 worktree 路徑命名；worktree 砍掉之後那個目錄會變成孤兒，但裡面是對話本身 —— 如果使用者中途換到新視窗接手，後半段的討論只存在那一份。要不要清掉是使用者的事，不要順手刪。
+
 驗證：
 
 ```bash
@@ -221,12 +267,13 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 |------|-------|-------|
 | 0 | 確認是被 `/isolated-worktree-session` 呼叫的 | 純手動 skill，沒被呼叫就整套不跑 |
 | 1 | 偵測現有 worktree | 不要巢狀 |
-| 2 | 從 HEAD 切 `tmp/...` branch + 在 repo root **外**（`<repo>.worktrees/...` sibling）開 worktree | 工作區隔離（雙向：別人也讀不到你） |
-| 3 | 把 session 鎖在 `$WORKTREE_DIR` | 防止 session 間互相污染 |
-| 4 | 正常改 code + commit | 進度推進 |
+| 2 | 從 HEAD 切 `tmp/...` branch + 在 repo root **外**（`<repo>.worktrees/...` sibling）開 worktree，並把 gitignore 掉的 `.env` 依相對路徑帶過去 | 工作區隔離（雙向：別人也讀不到你）；沒有 `.env` 的 worktree 跑不起來 |
+| 2.5 | 跑 `scripts/sync-session-to-worktree.py "$WORKTREE_DIR"` | 用新視窗開 worktree 時看得到、接得上這段對話 |
+| 3 | 把 session 鎖在 `$WORKTREE_DIR`（只有 2.5 那支腳本例外） | 防止 session 間互相污染 |
+| 4 | 正常改 code + commit；要換視窗前重跑 2.5 | 進度推進，對話不停在舊快照 |
 | 5 | 整合前先問 | 由使用者把關 |
 | 6 | 在原 repo 跑 `git cherry-pick $ORIGINAL_HEAD..$TEMP_BRANCH` | 把工作搬回去 |
-| 7 | `git worktree remove` + `git branch -D` | 清乾淨 |
+| 7 | `git worktree remove` + `git branch -D`（複製的對話留著） | 清乾淨，但不清掉對話記錄 |
 
 ## 常見錯誤
 
@@ -236,11 +283,13 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 **為什麼錯：** 這是純手動 skill。自己啟用會憑空多出 temp branch 跟 cherry-pick gate；主動問則是每次改 code 都多一輪來回。
 **怎麼改：** 直接在當前目錄改。使用者想隔離時會自己打 `/isolated-worktree-session`。
 
-### 為了「看 context」偷讀 parent / sibling dir
+### 任何離開 `$WORKTREE_DIR` 的動作（這是最常犯的一條）
 
-❌ `Read /Users/daniel/Heph/ai_family_backend/backend/some-file`（當 WORKTREE_DIR 是 repo 外的 `ai_family_backend.worktrees/foo/` 時）
-**為什麼錯：** 那個檔案可能正被另一個 session 改到一半。
-**怎麼改：** 只讀 `$WORKTREE_DIR` 裡的檔案。需要歷史 context 就用 `git log` / `git show`，**而且要在 worktree 內跑**。
+❌ 為了「看 context」讀 parent / sibling dir：`Read /Users/daniel/Heph/ai_family_backend/backend/some-file`（當 worktree 是 repo 外的 `ai_family_backend.worktrees/foo/` 時）
+❌ 「cd 上去看一眼 monorepo root」「我就 `ls ..` 一下」
+❌ 上鎖之後才發現少了某個沒被 git 追蹤的檔案（憑證、`.env.local`、本機設定），於是 `cp $REPO_ROOT/...` 撈過來
+**為什麼錯：** 那些檔案很可能正被另一個 session 改到一半 —— **read-only 也一樣**，讀到中間狀態就會生出假 bug。而且一個 `ls` 會變成一個 `cat`，再變成一個錯誤結論。
+**怎麼改：** 需要歷史 context 就用 `git log` / `git show`，**而且要在 worktree 內跑**。該帶的檔案 Step 2 一次帶完；真的漏了就**停下來告訴使用者少了什麼**，讓他決定要不要補。
 
 ### 用 `origin/main` 或 `main` 開 worktree 而不是 HEAD
 
@@ -265,11 +314,23 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 ❌ 開在 repo 內。別的 session 從 repo root 掃描（find / cat / 絕對路徑 Read / 非 gitignore-aware grep）會走進來讀到你改到一半的檔 —— 隔離只擋了「你讀別人」，沒擋「別人讀你」；`.gitignore` 也救不了（擋不了那些工具）。
 **怎麼改：** Step 2 把 worktree 開在 repo root **外面**的 sibling（`${REPO_ROOT}.worktrees/...`）。任何掃 repo root 的 session 都到不了。
 
-### 「我只是 cd 上去一層看看 monorepo root」
+### 只複製 repo root 的 `.env`
 
-❌ 任何離開 `$WORKTREE_DIR` 的 cd。
-**為什麼錯：** 直接違反整個 skill 的前提 —— 這就是使用者反映的那個 bug。
-**怎麼改：** 不要做。真的需要外面的東西就**停下來問使用者**。
+❌ `cp "$REPO_ROOT/.env" "$WORKTREE_DIR/"`
+**為什麼錯：** monorepo 的 `.env` 常常根本不在根目錄，而是在 `backend/`、`frontend/` 底下各一份。只抓根目錄的結果就是複製了零個檔案，然後 worktree 裡的 app 照樣起不來。
+**怎麼改：** 用 Step 2 那段 `git ls-files --others --ignored`，它會把每一份都依相對路徑放到對的位置。
+
+### 自己手動 `cp` transcript 過去，而不是跑那支腳本
+
+❌ `cp ~/.claude/projects/<原專案>/<sid>.jsonl ~/.claude/projects/<worktree>/`
+**為什麼錯：** 手動複製會漏掉三件事（懸空的 tool call、session id 互踩、sidecar 沒跟著走），結果就是那份對話 resume 不起來。
+**怎麼改：** 跑 Step 2.5 的 `scripts/sync-session-to-worktree.py`。
+
+### 複製完就當作兩邊會自動同步
+
+❌ Step 2.5 跑完，之後又聊了十輪，直接叫使用者去開新視窗。
+**為什麼錯：** 複製的是那一刻的快照，後面十輪不在裡面 —— 使用者換過去只會看到半截。
+**怎麼改：** 使用者要換視窗之前，把 Step 2.5 那一行再跑一次。
 
 ## Red Flags —— 想到下面這些話就立刻停下
 
@@ -282,19 +343,8 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 - 「讀另一個 worktree 比對一下」
 - 「cd 上去看一眼 monorepo root」
 - 「只看一下不會怎樣，read-only 而已」
+- 「worktree 裡起不來，我回原 repo 拿一下 `.env` 就好」
 - 「使用者明顯就想要 cherry-pick，直接做」
 - 「先清乾淨再來看 merge 有沒有成功」
 
-**這些念頭全部都代表：違反隔離規則 / 跳過確認 gate。停下，重讀 Step 3 或 Step 5。**
-
-## 偷雞理由 vs 真相
-
-| 偷雞理由 | 真相 |
-|---------|------|
-| 「他沒打 `/`，但這種情境明顯該隔離」 | 要不要隔離是使用者的決定。沒打 `/` 就是不要。**不要自己啟用，也不要問。** |
-| 「Read-only 沒差啦，我又沒改」 | 讀到別的 session 的中間狀態會產生假 bug。**禁止。** |
-| 「我要看 parent dir 才能理解」 | 那就問使用者。不要偷看。 |
-| 「使用者明顯就想 cherry-pick」 | 他要的是 gate。每次都要問。 |
-| 「先清一清比較整齊」 | 在 cherry-pick 前清理 = 工作消失。清理是**最後一步**。 |
-| 「同一個 repo 啦有什麼差」 | 平行 session 代表你 worktree 外面的檔案正被別人改。差別就是使用者抱怨的那個 bug。 |
-| 「我就 `ls ..` 一下」 | 一個 `ls` 變成一個 `cat`，變成一個錯誤結論。從一開始就不要。 |
+**這些念頭全部都代表：違反隔離規則 / 跳過確認 gate。停下，重讀 Step 3 或 Step 5，不要自己找理由繞過去。**
