@@ -22,6 +22,7 @@
 | [review-finding-format](skills/review-finding-format/) | review 問題的呈現格式，`code-review` 與 `pr-inline-comment` 共用同一套（所以 review 完的內容可直接發成留言）。每項含位置、問題、**🗣️ 白話情境**、建議解法。白話情境依 bug report 重現步驟的慣例寫：編號步驟、一行一動作、最短路徑、以「預期：… 實際：…」收尾——並發情境用「請求 A / 請求 B」交錯步驟表達，不標絕對時間。 |
 | [pr-inline-comment](skills/pr-inline-comment/) | 把問題發成 GitHub PR 或 GitLab MR 的 inline 留言（發 / 改 / 刪）。處理好三個踩雷點：commit SHA 取得、新增 / 刪除 / 未變動行各自的行號錨定規則、以及 **行號必須以整數送出**——用 `-f` 送成字串會讓 GitLab 靜默丟棄整個 position、把留言降級成不掛在任何行上的一般留言。附「確認確實是 inline」的驗證指令。 |
 | [debug-patches](skills/debug-patches/) | 「只在本機才要有」的 debug 改動 catalog（`patches/` 一筆一檔）。**純手動觸發**：呼叫後把符合當前 repo 的 patch 套進去、跑型別檢查、單獨包成一個 `temp:` commit，跟正在做的功能改動分開，測完可整包 drop。套用前會擋兩件事：既存的 temp commit、以及目標檔案已有的未 commit 改動（混在一起就 drop 不乾淨）。新增的行一律帶 `[temp-debug]` 標記，`remove` 模式據此清光。目前收錄：request 完成時把 req/res body 印進 access log。 |
+| [write-for-cold-reader](skills/write-for-cold-reader/) | 任何給人看的產出（程式碼註解、commit message、PR/MR 留言、文件、筆記、session 回話）共用同一套寫作標準：讀者只憑他手上真的有的東西就要讀得懂。先分清不對稱是哪一種——**A 讀者不在場**（註解／commit／文件）三條規則全開；**B 讀者在場但沒有你腦裡的東西**（session 回話）只需守「不依賴我讀過卻沒說出口的東西」。三條規則——① 只引用讀者手上有的東西（禁 .md 指標／自創詞／被砍掉的符號／未落地計畫）；② 逐句過「讀到這句會不會冒問號」測試（名詞要 grep 得到、結論寫死、修正句不擺句尾）；③ 解釋給機制不給生活類比，不熟的名詞當場展開。附各載體的「讀者手上有什麼」對照表與分段收尾自檢清單。 |
 
 ## 安裝
 
