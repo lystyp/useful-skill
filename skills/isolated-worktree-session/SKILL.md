@@ -1,13 +1,13 @@
 ---
 name: isolated-worktree-session
-description: **只有使用者親手輸入 `/isolated-worktree-session` 才執行**。這是純手動呼叫的 skill：不自動觸發、不因為「要改 code」而觸發、也不要主動問使用者要不要啟用。使用者沒有用 `/` 開頭明確呼叫，就直接在當前目錄改 code，當作這個 skill 不存在。被呼叫後才執行：從 HEAD 切 temp branch + 開 worktree + 把當前對話複製到 worktree 對應的 session 目錄（新視窗開 worktree 就能 resume 同一段對話）+ 嚴格隔離 + 結束時詢問是否 cherry-pick。
+description: 隔離工作流：從當前 HEAD 切 temp branch、在 repo root 外開 worktree（帶 .env、複製當前對話讓新視窗可 resume）、session 嚴格鎖定只在 worktree 內活動、結束時詢問是否 cherry-pick 回原 branch 再清理。使用者輸入 `/isolated-worktree-session` 必定執行；沒被明確呼叫時，Claude 判斷需要隔離也可以自主啟用——同一個 repo 有平行 session 在動、使用者提到「平行作業／隔離／怕污染／別動到主目錄」、或改動大到會讓共用 checkout 長時間處於中間狀態（大範圍 refactor、schema/migration、跨多檔的實驗性改動）。純問答、看 code 不改檔、一兩行瑣碎修改不要啟用；自主啟用前先用一句話宣告理由。
 ---
 
 # Isolated Worktree Session（隔離工作流）
 
 ## 總覽
 
-**這是純手動 skill：只有使用者輸入 `/isolated-worktree-session` 才跑，見 Step 0。**
+**手動輸入 `/isolated-worktree-session` 必定執行；Claude 判斷需要隔離時也可以自主啟用，判準見 Step 0。**
 
 從目前 HEAD 切一條 **temp branch**，並為它開一個 **worktree**，把 git 不會帶過去的 `.env` 補進去，然後把當前這段對話複製一份到 worktree 對應的 session 目錄 —— 使用者用新的 VS Code 開 worktree 時，就能在 resume 清單看到同一段對話並直接接下去。整個 session 只在這個 worktree 裡活動 —— 不讀、不寫、不 grep、不 glob、不 cd 到 worktree 以外的任何地方。做完之後，主動詢問使用者要不要把新 commit cherry-pick 回原 branch，然後刪掉 temp branch 與 worktree。
 
@@ -15,19 +15,21 @@ description: **只有使用者親手輸入 `/isolated-worktree-session` 才執�
 
 ## Step 0：確認觸發方式
 
-**唯一的觸發條件：使用者親手輸入 `/isolated-worktree-session`。**
+兩種進入方式都合法：
 
-只要不是這樣進來的，這個 skill 一律不執行 —— 直接在當前目錄改 code，當作沒這個 skill。
+**A. 使用者親手輸入 `/isolated-worktree-session`** —— 必定執行，不用再判斷。
 
-不算觸發的情況（全部都要當沒看到）：
-- 使用者要改 code / schema / migration / config / 文件（不管改動多大）
-- 同一個 repo 有多個 session 在跑
-- 使用者提到「平行作業」「另一個 session」「隔離一下」「怕污染」
-- 你自己判斷「這次改動很危險，用隔離比較保險」
+**B. Claude 自主啟用** —— 沒被 `/` 呼叫，但符合下列任一情況，就可以自己啟用：
 
-**也不要主動問。** 「要不要用 isolated-worktree-session？」這句話不要講 —— 要用的時候使用者會自己打 `/`。多問一句就是把選擇成本丟回去給他。
+- 同一個 repo 有平行 session 在動（`git worktree list` 看得到別人的作業 worktree、使用者提到「另一個視窗／session 也在跑」）
+- 使用者表達隔離意圖：「平行作業」「隔離一下」「怕污染」「別動到主目錄」
+- 改動大到會讓共用 checkout 長時間處於中間狀態：大範圍 refactor、schema / migration、跨多檔的實驗性改動
 
-被 `/isolated-worktree-session` 呼叫後，宣告：「啟用 isolated-worktree-session：先開 temp branch + worktree 再動 code。」然後進 Step 1。
+自主啟用前，先用一句話宣告理由（例如「這次要動 schema，我開隔離 worktree 做」）；使用者說不用，就直接在當前目錄做，同一輪任務內不要再提。
+
+**不該啟用的情況**：純問答、只看 code 不改檔、一兩行的瑣碎修改、或使用者已明確說「直接改就好」。
+
+觸發後（不論 A 或 B），宣告：「啟用 isolated-worktree-session：先開 temp branch + worktree 再動 code。」然後進 Step 1。
 
 **例外：已經在 linked worktree 裡。** 就算沒被 `/` 呼叫，Step 1 的偵測若發現當前已在 linked worktree，仍要套用 Step 3 的鎖定規則（不要跑出去讀外面）—— 不要新建 worktree。至於做完要不要跑 cherry-pick 流程，看這個 worktree 裡有沒有 `.worktree-session-meta`：
 - **有** → 這個 worktree 是這套流程開的（很可能就是使用者換視窗接手的那份對話）。從裡面讀出 `ORIGINAL_BRANCH` / `ORIGINAL_HEAD` / `TEMP_BRANCH` / `REPO_ROOT`，Step 4 之後照跑，收尾由這邊負責。
@@ -265,7 +267,7 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 | Step | 做什麼 | 為什麼 |
 |------|-------|-------|
-| 0 | 確認是被 `/isolated-worktree-session` 呼叫的 | 純手動 skill，沒被呼叫就整套不跑 |
+| 0 | 確認觸發方式：手動呼叫必跑；自主啟用要符合判準並宣告理由 | 隔離有成本，瑣事不開 worktree |
 | 1 | 偵測現有 worktree | 不要巢狀 |
 | 2 | 從 HEAD 切 `tmp/...` branch + 在 repo root **外**（`<repo>.worktrees/...` sibling）開 worktree，並把 gitignore 掉的 `.env` 依相對路徑帶過去 | 工作區隔離（雙向：別人也讀不到你）；沒有 `.env` 的 worktree 跑不起來 |
 | 2.5 | 跑 `scripts/sync-session-to-worktree.py "$WORKTREE_DIR"` | 用新視窗開 worktree 時看得到、接得上這段對話 |
@@ -277,11 +279,11 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 ## 常見錯誤
 
-### 沒被 `/isolated-worktree-session` 呼叫就自己啟用（或主動問要不要啟用）
+### 為瑣碎改動自主啟用（或被拒絕後還一直問）
 
-❌ 使用者說「幫我改一下這段」，你就開 worktree；或先問一句「要不要用隔離工作流？」
-**為什麼錯：** 這是純手動 skill。自己啟用會憑空多出 temp branch 跟 cherry-pick gate；主動問則是每次改 code 都多一輪來回。
-**怎麼改：** 直接在當前目錄改。使用者想隔離時會自己打 `/isolated-worktree-session`。
+❌ 使用者只是要改一兩行、或純看 code，你就開 worktree；或使用者這輪已經說過「直接改就好」，你又問一次要不要隔離。
+**為什麼錯：** temp branch + 上鎖 + cherry-pick gate 對瑣事是純開銷；被拒絕後重複問是把選擇成本丟回去給使用者。
+**怎麼改：** 瑣事直接在當前目錄改。自主啟用只用在 Step 0 的判準（平行 session／使用者表達隔離意圖／大改動），啟用前宣告一句理由，被拒絕後同一輪不再提。
 
 ### 任何離開 `$WORKTREE_DIR` 的動作（這是最常犯的一條）
 
@@ -336,8 +338,8 @@ git log --oneline -5              # 有 cherry-pick 的話可以看到新 commit
 
 下面任何一個念頭出現，代表你正準備違反規則：
 
-- 「這次改動有點大，我先幫他開個 worktree 比較安全」
-- 「先問一下他要不要用隔離工作流好了」
+- 「改一行也開個 worktree 好了，反正比較安全」
+- 「他剛說不用隔離，我再確認一次好了」
 - 「快速看一下 parent 目錄就好」
 - 「我 grep 整個 repo 找 reference」
 - 「讀另一個 worktree 比對一下」

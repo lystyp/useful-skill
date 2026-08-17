@@ -13,7 +13,7 @@
       "name": "useful-skills",
       "source": { "source": "url", "url": "https://github.com/lystyp/useful-skill.git" },
       "description": "個人開發方法論 skills：design-sparring-partner（協作姿態，內含分層架構／可讀性冷讀／設計模式對照 references）、research-industry-practices、project-conventions、test-writing-style、grill-me、learn-from-known、commit、isolated-worktree-session、ai-family-backend-style、useful-tools（實用工具設定集：Claude Code 完成通知等）、jira（Jira Cloud REST API v3 查詢與操作 issue，含 JQL／建票／comment／轉狀態）、code-review（審 branch diff／GitHub PR／GitLab MR，先讀懂改動目的再逐項套 12 份 checklist，fan-out 檢查＋critic 覆核＋禁空證據 PASS；語言與框架中立）、review-finding-format（review 問題的呈現格式：位置／問題／🗣️ 白話情境／建議解法）、pr-inline-comment（把問題發成 GitHub PR 或 GitLab MR 的 inline 留言）、debug-patches（把只在本機要有的 debug 改動套進 repo 並單獨包成 temp commit，測完整包丟掉）、write-for-cold-reader（所有給人看的產出共用的寫作標準：讀者只憑手上真的有的東西就要讀得懂）",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "strict": true
     }
   ]
