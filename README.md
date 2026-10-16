@@ -110,6 +110,8 @@ claude plugin update pstack@daniel-useful-skills --scope user
 
 只需執行已安裝 Plugin 的更新命令；若安裝在 project 或 local，改用該 scope。更新後開新 Session，或在既有 Session 執行 `/reload-plugins`。
 
+useful-skills 的 `plugin.json` 與 marketplace 條目刻意不寫 `version`，讓 Claude Code 以 git commit SHA 當版本，每次 push 都會被 `claude plugin update` 視為新版。不要加回 `version`：版本字串沒變時，update 會判定已是最新，新推的 skill 不會進到已安裝的快取。
+
 Matt 與 pstack 從各自上游取得更新，不需把程式碼同步到這個 Repository。Claude Code 優先使用上游 `plugin.json` 的版本辨識更新；若上游只改 commit 而未改 manifest 版本，可能仍被視為同版本，不能保證每個上游 commit 都會刷新快取。本 Marketplace 不改寫上游版本機制。
 
 > `code-review-skill` 是既有外部 git submodule；維持原本安裝限制，需要的話請去 [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) 另外安裝。
