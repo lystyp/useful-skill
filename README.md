@@ -1,6 +1,18 @@
 # useful-skill
 
-個人收集的 Claude Code Skills。
+個人收集的 Claude Code Skills，以及管理三個獨立 Plugins 的 `daniel-useful-skills` Marketplace。
+
+## Marketplace Plugins
+
+| Plugin 安裝 ID | 上游來源與 Plugin 路徑 | Skill namespace |
+| --- | --- | --- |
+| `useful-skills@daniel-useful-skills` | 本 Repository 根目錄，維持既有設定 | `/useful-skills:<skill>` |
+| `mattpocock-skills@daniel-useful-skills` | [mattpocock/skills](https://github.com/mattpocock/skills) 根目錄，使用 `github` source | `/mattpocock-skills:<skill>` |
+| `pstack@daniel-useful-skills` | [michael-denyer/pstack-claude](https://github.com/michael-denyer/pstack-claude) 的 `plugins/pstack`，使用 `git-subdir` source | `/pstack:<skill>` |
+
+三個 Plugin 可分別安裝、啟用、停用。Marketplace 只登記上游來源，不複製上游程式碼、不改寫 SKILL.md；安裝時由 Claude Code 抓取 Plugin。兩筆外部來源未設定 `ref`、`sha` 或額外的 `version`，沿用上游預設分支與 manifest 版本。升級到最新版 Claude Code 後使用，避免舊版不接受 `git-subdir` 的問題。
+
+pstack 保留上游完整 Plugin，包含 agents 與 SessionStart hook；啟用 pstack 時，其上游內建工作流程也會載入。本 Marketplace 不另外增加 Router 或自動選擇機制。上游完整功能所需的執行環境與依賴，請依各自 README 設定。
 
 ## Skills
 
@@ -29,16 +41,93 @@
 
 ### 方法一：Plugin marketplace（推薦）
 
-在 Claude Code 裡一次裝整包：
+以下 `claude ...` 指令在終端機執行。加入 Marketplace 後，可依需要各別安裝：
 
+```bash
+claude plugin marketplace add lystyp/useful-skill
+claude plugin install useful-skills@daniel-useful-skills --scope user
+claude plugin install mattpocock-skills@daniel-useful-skills --scope user
+claude plugin install pstack@daniel-useful-skills --scope user
+claude plugin list
 ```
-/plugin marketplace add lystyp/useful-skill
-/plugin install useful-skills@daniel-useful-skills
+
+已加入 Marketplace 的使用者，先執行 `claude plugin marketplace update daniel-useful-skills` 取得新增項目。也可以在 Claude Code Session 內使用 `/plugin marketplace add lystyp/useful-skill`，並透過 `/plugin` 選取要安裝的 Plugin。
+
+安裝與啟用是兩件事：Plugin 可以留在本機快取，停用後不載入其元件。安裝通常會啟用 Plugin；若要每次 Session 自行挑選，安裝完成後先停用這三個預設值：
+
+```bash
+claude plugin disable useful-skills@daniel-useful-skills --scope user
+claude plugin disable mattpocock-skills@daniel-useful-skills --scope user
+claude plugin disable pstack@daniel-useful-skills --scope user
 ```
 
-之後 repo 有更新，用 `/plugin marketplace update daniel-useful-skills` 就能拉到最新。
+如果已停用，指令可能回報 already disabled；用 `claude plugin list` 核對狀態即可。
 
-> `code-review-skill` 是外部 git submodule，不會跟著 plugin 一起裝；需要的話請去它的 upstream（[awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill)）另外安裝。
+#### 每次 Session 只載入指定的一套 Plugin
+
+Claude Code 官方支援 `--settings` 搭配 `enabledPlugins`，只覆寫這次啟動的設定，不寫回設定檔。先完成上述安裝，再依需求執行其中一條：
+
+```bash
+# Session A：Matt
+claude --settings '{"enabledPlugins":{"useful-skills@daniel-useful-skills":false,"mattpocock-skills@daniel-useful-skills":true,"pstack@daniel-useful-skills":false}}'
+
+# Session B：pstack
+claude --settings '{"enabledPlugins":{"useful-skills@daniel-useful-skills":false,"mattpocock-skills@daniel-useful-skills":false,"pstack@daniel-useful-skills":true}}'
+
+# Session C：useful-skills
+claude --settings '{"enabledPlugins":{"useful-skills@daniel-useful-skills":true,"mattpocock-skills@daniel-useful-skills":false,"pstack@daniel-useful-skills":false}}'
+```
+
+這會實際控制這三個 Plugin 的載入，包含 skills、agents、hooks 等元件。三個 ID 都明確寫出，因為 `enabledPlugins` 會逐個 ID 合併，省略某個 ID 會沿用既有設定。也可把其中一份 JSON 自行存檔，再用 `claude --settings /absolute/path/to/settings.json` 啟動，無需自訂工具。恢復對話時，也請在 `claude --resume ...` 同時傳入所選的 `--settings`。
+
+這三組指令只控制本 Marketplace 的三個 ID；其他已安裝 Plugin、從其他 Marketplace 安裝的同名副本，以及手動放在 `~/.claude/skills/` 或專案 `.claude/skills/` 的獨立 skills，不會因此停用。如果要只保留一套，先檢查是否有這些副本並分別停用或移除。組織 managed settings 優先於 `--settings`，若管理員強制啟用某個 Plugin，這些指令無法覆蓋。
+
+進入 Session 後，用 `/plugin` 的 Installed 與 Errors 檢查實際載入及錯誤；用 `/skills` 核對可用 skills。若要切換套件，結束後以另一條指令開新 Session；既有對話中已注入的內容不會因停用而消失。
+
+#### 持久啟用／停用與設定範圍
+
+以下以 pstack 為例，將 ID 換成表格中的另外兩個即可：
+
+```bash
+claude plugin enable pstack@daniel-useful-skills --scope user
+claude plugin disable pstack@daniel-useful-skills --scope user
+```
+
+`user` 寫入 `~/.claude/settings.json`，影響所有專案；`project` 寫入專案 `.claude/settings.json`；`local` 寫入專案 `.claude/settings.local.json`，適合自己的專案覆寫。持久化命令的 scope 沒有 `session`，單次 Session 使用上面的啟動參數即可。
+
+設定優先順序為 managed → `--settings` → local → project → user。在 Session 內可使用 `/plugin enable <ID>`、`/plugin disable <ID>` 或 Installed 頁面管理；這些會保存設定，不是單次 Session 選擇。變更後開新 Session，或依提示執行 `/reload-plugins`；SessionStart hook 的完整啟動行為仍應以新 Session 驗證。
+
+#### 更新 Marketplace 與 Plugin
+
+更新目錄和更新已安裝 Plugin 是不同步驟：
+
+```bash
+claude plugin marketplace update daniel-useful-skills
+claude plugin update useful-skills@daniel-useful-skills --scope user
+claude plugin update mattpocock-skills@daniel-useful-skills --scope user
+claude plugin update pstack@daniel-useful-skills --scope user
+```
+
+只需執行已安裝 Plugin 的更新命令；若安裝在 project 或 local，改用該 scope。更新後開新 Session，或在既有 Session 執行 `/reload-plugins`。
+
+Matt 與 pstack 從各自上游取得更新，不需把程式碼同步到這個 Repository。Claude Code 優先使用上游 `plugin.json` 的版本辨識更新；若上游只改 commit 而未改 manifest 版本，可能仍被視為同版本，不能保證每個上游 commit 都會刷新快取。本 Marketplace 不改寫上游版本機制。
+
+> `code-review-skill` 是既有外部 git submodule；維持原本安裝限制，需要的話請去 [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) 另外安裝。
+
+#### 驗證與目前限制
+
+本次已檢查 JSON 可解析、三個 Plugin 名稱唯一、Marketplace 欄位與來源格式符合官方文件、兩個上游 manifest 的名稱與實際 Plugin 路徑相符，以及既有 useful-skills 登錄未改動。
+
+準備這份變更的環境沒有安裝 Claude Code，因此尚未實際執行官方驗證器、安裝、更新、Session 載入與停用測試。可在本機 checkout 此變更後執行：
+
+```bash
+claude --version
+claude plugin validate .
+```
+
+接著依上方安裝與三組啟動指令，分別確認只有選定的一套載入、另兩套停用，並檢查 pstack 的 SessionStart hook 是否正常。官方驗證器只驗證本機目錄，不會抓取外部來源；外部 Plugin 的下載與執行仍須透過實際安裝測試。
+
+官方文件：[Marketplace 來源格式](https://code.claude.com/docs/en/plugins/marketplace-reference)、[Plugin 指令](https://code.claude.com/docs/en/plugins/cli-reference)、[載入與設定優先順序](https://code.claude.com/docs/en/plugins/loading)、[單次 Session 設定](https://code.claude.com/docs/en/settings#change-a-setting-for-one-session)。
 
 ### 方法二：手動 symlink 個別 skill
 
