@@ -9,4 +9,5 @@ argument-hint: "[MR/PR URL、branch 名；留空＝當前 branch]"
 
 - 讀 commit 訊息／MR 描述抓動機，再回 code 驗證（呼叫端、頻率、diff 外的 helper 實作）。
 - 講出原本的問題機制、怎麼改、行為有沒有變；驗證過的跟作者說的分開寫。
+- 當作 user 沒看過 code，白話具體說明原本遇到什麼問題、怎麼改的、為什麼要改。
 - 說明完問 user 要不要 `git reset` 到這個 MR 第一筆 commit 的上一筆（改動留在工作區方便看 diff），他同意才做。
