@@ -36,6 +36,7 @@ pstack 保留上游完整 Plugin，包含 agents 與 SessionStart hook；啟用 
 | [debug-patches](skills/debug-patches/) | 「只在本機才要有」的 debug 改動 catalog（`patches/` 一筆一檔）。**純手動觸發**：呼叫後把符合當前 repo 的 patch 套進去、跑型別檢查、單獨包成一個 `temp:` commit，跟正在做的功能改動分開，測完可整包 drop。套用前會擋兩件事：既存的 temp commit、以及目標檔案已有的未 commit 改動（混在一起就 drop 不乾淨）。新增的行一律帶 `[temp-debug]` 標記，`remove` 模式據此清光。目前收錄：request 完成時把 req/res body 印進 access log。 |
 | [write-for-cold-reader](skills/write-for-cold-reader/) | 任何給人看的產出（程式碼註解、commit message、PR/MR 留言、文件、筆記、session 回話）共用同一套寫作標準：讀者只憑他手上真的有的東西就要讀得懂。先分清不對稱是哪一種——**A 讀者不在場**（註解／commit／文件）三條規則全開；**B 讀者在場但沒有你腦裡的東西**（session 回話）只需守「不依賴我讀過卻沒說出口的東西」。三條規則——① 只引用讀者手上有的東西（禁 .md 指標／自創詞／被砍掉的符號／未落地計畫）；② 逐句過「讀到這句會不會冒問號」測試（名詞要 grep 得到、結論寫死、修正句不擺句尾）；③ 解釋給機制不給生活類比，不熟的名詞當場展開。附各載體的「讀者手上有什麼」對照表與分段收尾自檢清單。 |
 | [explain-mr](skills/explain-mr/) | 白話具體說明一份 branch／MR／PR 在幹嘛、為什麼要做。 |
+| [explain-code-flow](skills/explain-code-flow/) | 替一份改動排一條從最外層入口一路往下讀的閱讀路線：一個入口一條路線、照執行順序排站，每站附 `檔案:行號` 與這站要看什麼，最後對照測試。 |
 
 ## 安裝
 
