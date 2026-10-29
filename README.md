@@ -1,6 +1,6 @@
 # useful-skill
 
-個人收集的 Claude Code Skills，以及管理三個獨立 Plugins 的 `daniel-useful-skills` Marketplace。
+個人收集的 Claude Code Skills，以及管理四個獨立 Plugins 的 `daniel-useful-skills` Marketplace。
 
 ## Marketplace Plugins
 
@@ -9,10 +9,13 @@
 | `useful-skills@daniel-useful-skills` | 本 Repository 根目錄，維持既有設定 | `/useful-skills:<skill>` |
 | `mattpocock-skills@daniel-useful-skills` | [mattpocock/skills](https://github.com/mattpocock/skills) 根目錄，使用 `github` source | `/mattpocock-skills:<skill>` |
 | `pstack@daniel-useful-skills` | [michael-denyer/pstack-claude](https://github.com/michael-denyer/pstack-claude) 的 `plugins/pstack`，使用 `git-subdir` source | `/pstack:<skill>` |
+| `remotion-skills@daniel-useful-skills` | [remotion-dev/skills](https://github.com/remotion-dev/skills) 根目錄，使用 `github` source | `/remotion-skills:<skill>` |
 
-三個 Plugin 可分別安裝、啟用、停用。Marketplace 只登記上游來源，不複製上游程式碼、不改寫 SKILL.md；安裝時由 Claude Code 抓取 Plugin。兩筆外部來源未設定 `ref`、`sha` 或額外的 `version`，沿用上游預設分支與 manifest 版本。升級到最新版 Claude Code 後使用，避免舊版不接受 `git-subdir` 的問題。
+四個 Plugin 可分別安裝、啟用、停用。Marketplace 只登記上游來源，不複製上游程式碼、不改寫 SKILL.md；安裝時由 Claude Code 抓取 Plugin。三筆外部來源未設定 `ref`、`sha` 或額外的 `version`，沿用上游預設分支與 manifest 版本。升級到最新版 Claude Code 後使用，避免舊版不接受 `git-subdir` 的問題。
 
 pstack 保留上游完整 Plugin，包含 agents 與 SessionStart hook；啟用 pstack 時，其上游內建工作流程也會載入。本 Marketplace 不另外增加 Router 或自動選擇機制。上游完整功能所需的執行環境與依賴，請依各自 README 設定。
+
+remotion-skills 的上游沒有 `.claude-plugin/plugin.json`，Marketplace 條目本身就是它的 manifest，Claude Code 會載入上游 `skills/` 底下的 12 支 skill（`remotion-best-practices`、`remotion-create`、`remotion-studio`、`remotion-render` 等）。它是做影片時才用的領域工具，跟另外三套工作方法不互斥，所以沒有放進下面「每次 Session 只載入一套」的切換指令。
 
 ## Skills
 
@@ -49,6 +52,7 @@ claude plugin marketplace add lystyp/useful-skill
 claude plugin install useful-skills@daniel-useful-skills --scope user
 claude plugin install mattpocock-skills@daniel-useful-skills --scope user
 claude plugin install pstack@daniel-useful-skills --scope user
+claude plugin install remotion-skills@daniel-useful-skills --scope user
 claude plugin list
 ```
 
@@ -87,7 +91,7 @@ claude --settings '{"enabledPlugins":{"useful-skills@daniel-useful-skills":true,
 
 #### 持久啟用／停用與設定範圍
 
-以下以 pstack 為例，將 ID 換成表格中的另外兩個即可：
+以下以 pstack 為例，將 ID 換成表格中的其他 ID 即可：
 
 ```bash
 claude plugin enable pstack@daniel-useful-skills --scope user
@@ -107,13 +111,14 @@ claude plugin marketplace update daniel-useful-skills
 claude plugin update useful-skills@daniel-useful-skills --scope user
 claude plugin update mattpocock-skills@daniel-useful-skills --scope user
 claude plugin update pstack@daniel-useful-skills --scope user
+claude plugin update remotion-skills@daniel-useful-skills --scope user
 ```
 
 只需執行已安裝 Plugin 的更新命令；若安裝在 project 或 local，改用該 scope。更新後開新 Session，或在既有 Session 執行 `/reload-plugins`。
 
 useful-skills 的 `plugin.json` 與 marketplace 條目刻意不寫 `version`，讓 Claude Code 以 git commit SHA 當版本，每次 push 都會被 `claude plugin update` 視為新版。不要加回 `version`：版本字串沒變時，update 會判定已是最新，新推的 skill 不會進到已安裝的快取。
 
-Matt 與 pstack 從各自上游取得更新，不需把程式碼同步到這個 Repository。Claude Code 優先使用上游 `plugin.json` 的版本辨識更新；若上游只改 commit 而未改 manifest 版本，可能仍被視為同版本，不能保證每個上游 commit 都會刷新快取。本 Marketplace 不改寫上游版本機制。
+Matt、pstack 與 remotion-skills 從各自上游取得更新，不需把程式碼同步到這個 Repository。Claude Code 優先使用上游 `plugin.json` 的版本辨識更新；若上游只改 commit 而未改 manifest 版本，可能仍被視為同版本，不能保證每個上游 commit 都會刷新快取。本 Marketplace 不改寫上游版本機制。
 
 > `code-review-skill` 是既有外部 git submodule；維持原本安裝限制，需要的話請去 [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) 另外安裝。
 

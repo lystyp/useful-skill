@@ -31,6 +31,14 @@
         "path": "plugins/pstack"
       },
       "description": "Michael Denyer 的 pstack Claude Code 移植版本；保留上游 skills、agents 與 hooks。"
+    },
+    {
+      "name": "remotion-skills",
+      "source": {
+        "source": "github",
+        "repo": "remotion-dev/skills"
+      },
+      "description": "Remotion 官方 Agent Skills：用 React 寫影片、在 Studio 預覽、渲染輸出；直接引用上游 skills 目錄。"
     }
   ]
 }
